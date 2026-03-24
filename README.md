@@ -159,7 +159,7 @@ agents/
   cli-architect.md          — architecture blueprint (minimal vs modular)
   cli-reviewer.md           — code review (correctness / completeness / conventions)
 
-guides/
+rules/
   folder-structure.md       — canonical layout including .cli/ folder
   ui-patterns.md            — HTML template, dark palette, SSE bridge
   file-browser-bridge.md    — Bun fs.watch → SSE → browser → POST

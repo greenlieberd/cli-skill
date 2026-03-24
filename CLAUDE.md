@@ -23,7 +23,7 @@ agents/
   cli-architect.md          — architecture design (minimal vs modular)
   cli-reviewer.md           — code review (correctness / completeness / conventions)
 
-guides/
+rules/
   folder-structure.md       — canonical layout, .cli/ folder, naming, file size rules
   ui-patterns.md            — HTML template, dark palette, SSE bridge
   file-browser-bridge.md    — Bun fs.watch → SSE → browser → POST back

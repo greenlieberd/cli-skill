@@ -1,6 +1,6 @@
 ---
 name: audit-cli
-description: Use this skill when the user wants to review, improve, or plan work on an existing CLI project. Triggers on "audit this CLI", "review my CLI", "what needs fixing", "plan work on this tool", "give me a roadmap for X", or when the user passes a path to an existing Bun/Node CLI project. Produces a prioritized PLAN.md the user can then execute with /fix-cli.
+description: Use this skill when the user wants to review, improve, or plan work on an existing CLI project. Triggers on "audit this CLI", "review my CLI", "what needs fixing", "plan work on this tool", "give me a roadmap for X", or when the user passes a path to an existing Bun/Node CLI project. Produces a .cli/ folder with CONTEXT.md, DECISIONS.md, and PLAN.md the user can execute with /fix-cli.
 argument-hint: "[path/to/cli-project]"
 model: sonnet
 effort: high
@@ -8,18 +8,17 @@ context: fork
 allowed-tools: Read, Write, Glob, Grep, LS, Bash
 ---
 
-# CLI Audit — Improvement Plan
+# CLI Audit — Understand, Evaluate, Plan
 
-Analyze an existing CLI project and produce a `PLAN.md` with specific, prioritized tasks the user can execute. This is not a generic code review — every finding must map to a concrete action item.
+Analyze an existing CLI project and produce a `.cli/` folder (CONTEXT.md + DECISIONS.md + PLAN.md) with actionable, prioritized tasks. This is not a style review — every finding must map to a specific task someone can execute.
 
 ## Context loaded at runtime
 
-Project path from arguments: `$ARGUMENTS`
-
+Project path: `$ARGUMENTS`
 Current directory: !`pwd`
 
-Conventions reference (folder structure standard):
-!`cat "${CLAUDE_SKILL_DIR}/../../guides/folder-structure.md" 2>/dev/null | head -60`
+Convention reference:
+!`cat "${CLAUDE_SKILL_DIR}/../../rules/folder-structure.md" 2>/dev/null | head -50 || cat "${CLAUDE_SKILL_DIR}/../../rules/folder-structure.md" 2>/dev/null | head -50`
 
 ---
 
@@ -32,116 +31,163 @@ Which CLI project should I audit?
 (paste the path, or press enter to use the current directory)
 ```
 
-Then immediately ask — one message:
+Then ask — one message:
 
 ```
-What's your goal for this audit? Choose one:
+What are you trying to get out of this audit?
 
-1. Find bugs — correctness, crashes, error handling
-2. Improve UX — navigation, output clarity, terminal experience
-3. Add features — what new capabilities would be most valuable
-4. Prep for release — production readiness, docs, tests, .env
-5. Full review — everything
+- Find bugs — crashes, bad error handling, broken flows
+- Improve UX — navigation, output clarity, resize issues, feedback
+- Add capabilities — new sources, commands, or interfaces
+- Prep for release — tests, docs, .env.example, CLAUDE.md
+- Full review — everything
 
-Or describe it in your own words.
+Or describe your goal in your own words.
 ```
 
 ---
 
-## Step 2 — Explore the project
+## Step 1 — Explore the project
 
-Launch the `cli-explorer` agent on the confirmed project path. Pass this exact instruction:
+Launch the `cli-explorer` agent on the confirmed path with this instruction:
 
-> Analyze the CLI at [path]. Report: entry points, command structure, UI layer (HUD vs Wizard vs script), model usage and whether IDs are hardcoded, data sources and whether they return SourceResult or throw, test coverage, storage patterns (.propane/, output/, .cache/), and any patterns that would be painful to change. List the 5 most important files to read before adding any code.
+> Analyze the CLI at [path]. Report: (1) entry points and how to run it, (2) interface type — HUD (ANSI) or Wizard (Ink) or Commands-only, (3) model usage — are IDs in models.ts or hardcoded?, (4) data sources — do they return SourceResult or throw?, (5) storage — what's in .propane/ and output/?, (6) tests — what's covered and what's missing, (7) missing conventions compared to the standard layout, (8) 5 most important files to read before touching anything.
 
 Wait for the full explorer report before continuing.
 
 ---
 
-## Step 3 — Convention check
+## Step 2 — Convention audit
 
-Using the explorer report and the folder structure guide loaded above, check these against the actual code:
+Using the explorer report, systematically check each item. Mark each as ✓ (ok), ✗ (issue), or — (not applicable):
 
-**Will break or block future work:**
-- Hardcoded model ID strings anywhere outside `src/models.ts`
-- Sources that `throw` instead of returning `SourceResult`
-- `cli.ts` doing business logic (should be router only, under 80 lines)
-- No `loadEnv()` call before first env var access
-- Hardcoded file paths that break on other machines
+**Will block shipping or extending:**
+- [ ] Model IDs hardcoded outside `src/models.ts`
+- [ ] Sources that `throw` instead of returning `SourceResult`
+- [ ] `cli.ts` over 80 lines (business logic in the router)
+- [ ] `loadEnv()` not called before first `process.env` access
+- [ ] Hardcoded absolute file paths (breaks on other machines)
+- [ ] No `CLAUDE.md` — future AI sessions fly blind
 
-**Slows you down:**
-- No `CLAUDE.md` or `CLAUDE.md` that doesn't match the actual architecture
-- No `.env.example` documenting required keys
-- No tests, or tests that only mock (never hit real endpoints)
-- `hud.ts` over 300 lines without splitting into screen functions
-- Direct `process.env` access outside of `configure.ts`
+**Slows down development:**
+- [ ] No `.env.example` — team members don't know what keys are required
+- [ ] `hud.ts` over 300 lines without screen-function splits
+- [ ] No tests, or tests that only mock (never exercise real paths)
+- [ ] Direct `process.env` access outside `configure.ts`
+- [ ] ANSI HUD has no `process.stdout.on('resize', redraw)` — will corrupt on resize
 
-**Worth doing before the next release:**
-- No `PLAN.md`
-- No ASCII art header (HUD style)
-- No MCP server — would this output be useful in Claude Desktop?
-- Browser view would make output more readable but doesn't exist
+**Worth doing before next release:**
+- [ ] No `.cli/` folder — no architecture context for future sessions
+- [ ] No ASCII art header (HUD) or branded Frame title (Wizard)
+- [ ] No MCP server — but this tool generates output useful in Claude Desktop
+- [ ] No browser view — output would be more readable in a page
 
 ---
 
-## Step 4 — Write PLAN.md
+## Step 3 — Write `.cli/` folder
 
-Write to `<project-path>/PLAN.md`. Use this exact format — the `/fix-cli` skill reads it:
+Create `.cli/` in the project root. Write all three files.
+
+### `.cli/CONTEXT.md`
+
+Synthesize from the explorer report. Write for a future AI agent reading it cold.
 
 ```markdown
-# PLAN — [project name]
+# [project-name] — Project Context
 
-> Audit goal: [user's stated goal]
-> Audited: [today's date]
-> Status: 0 of [N] tasks complete
+## Purpose
+[What it does, what triggers it, what it produces — from explorer findings]
 
-## Summary
+## Interface
+[HUD (ANSI) | Wizard (Ink) | Commands | Hybrid] — key file: [path]
 
-[2–3 sentences: what's working well, the biggest gap, and the most valuable next step]
+## AI usage
+[What models are used and for what tasks, or "none"]
 
-## Critical — fix before adding anything new
+## Data
+Sources: [list or "none"]
+Output: [where results go]
+Storage: .propane/ (runtime state) · output/ (generated files)
 
-- [ ] **[short task name]** — [one sentence: what to do and why it unblocks other work]
-- [ ] ...
+## Conventions
+- Model IDs: src/models.ts only
+- Sources: return SourceResult, never throw
+- Entry: bun hud
 
-## Improvements — high value, not blocking
-
-- [ ] **[short task name]** — [what to do]
-- [ ] ...
-
-## Ideas — worth discussing before committing
-
-- **[idea]** — [tradeoff in one sentence]
-- ...
-
-## Build order
-
-Work through tasks in this sequence — each one unblocks the next:
-
-1. [task name] — [why first]
-2. [task name] — [why second]
-3. ...
+## Do not
+[2–3 specific things from the audit that would break this project]
 ```
 
-Confirm the full path with the user before writing.
+### `.cli/DECISIONS.md`
+
+Reconstruct the architecture decisions from the existing code. Write "this project chose X because Y" — infer the reasoning from what's there.
+
+```markdown
+# Architecture Decisions — [project-name]
+
+## Interface: [HUD | Wizard | Commands]
+[Inferred rationale from the code structure]
+
+## AI: [tiers in use]
+[What Claude does in this tool]
+
+## Sources
+[Why these APIs]
+
+## Audit note
+This file was generated by /audit-cli on [date]. Decisions inferred from existing code.
+```
+
+### `.cli/PLAN.md`
+
+Use this exact format — `/fix-cli` parses it:
+
+```markdown
+# PLAN — [project-name]
+
+> Status: 0 of [N] tasks complete
+> Audited: [date]
+> Goal: [user's stated audit goal]
+
+## Build next
+<!-- Work these top to bottom. Each one is specific enough to start immediately. -->
+
+- [ ] **[task name]** `[type]` — [what to do, one sentence]
+- [ ] **[task name]** `[type]` — [what to do]
+
+## Later
+<!-- High-value but not blocking. -->
+
+- [ ] **[task name]** `[type]` — [what to do]
+
+## Ideas
+<!-- Discussions, not tasks. /fix-cli skips this section. -->
+
+- **[idea]** — [tradeoff]
+```
+
+Task type labels (used by /fix-cli for commit messages):
+`feat` `fix` `refactor` `test` `docs` `chore`
+
+Every task must be specific enough to start immediately — not "improve tests" but "add test for fetchReddit when API returns 401".
 
 ---
 
-## Step 5 — Quality check the plan
+## Step 4 — Verify the plan quality
 
-Launch `cli-reviewer` with argument `completeness` to verify:
-- Does every finding from the explorer report appear as a task?
-- Are tasks specific enough to act on immediately? (not "improve tests" but "add test for fetchReddit error case")
-- Is the build order logical — does each task actually unblock the next?
+Launch `cli-reviewer completeness` with the `.cli/PLAN.md` content. Ask it to verify:
+- Is every issue from Step 2 represented as a task?
+- Are all tasks specific enough to execute immediately?
+- Is the build-next list ordered so each task unblocks the next?
 
-Apply any corrections, then present the final summary.
+Apply corrections. Then write the final `.cli/PLAN.md`.
 
 ---
 
 ## Output
 
 Tell the user:
-1. Path to `PLAN.md`
-2. The single most important task to start with and why
+1. `.cli/` folder written to: `[path]`
+2. The single most important task and why
 3. Rough scope: "under a day" / "a few days" / "significant refactor"
-4. How to execute: "Run `/fix-cli [path]` to start working through the plan"
+4. Next step: "Run `/fix-cli [path]` to start working through the plan"

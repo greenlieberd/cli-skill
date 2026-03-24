@@ -1,6 +1,6 @@
 ---
 name: fix-cli
-description: Use this skill to execute tasks from a PLAN.md one by one. Triggers on "execute the plan", "work through the plan", "fix the CLI", "implement task 1", or when the user wants to act on audit findings. Requires a PLAN.md to exist (run /audit-cli first if it doesn't).
+description: Use this skill to execute tasks from .cli/PLAN.md one by one. Triggers on "execute the plan", "work through the plan", "fix the CLI", "implement task 1", or when the user wants to act on audit findings. Requires .cli/PLAN.md to exist (run /audit-cli first if it doesn't).
 argument-hint: "[path/to/cli-project]"
 model: sonnet
 effort: high
@@ -10,158 +10,154 @@ allowed-tools: Read, Write, Edit, Glob, Grep, LS, Bash
 
 # Fix CLI — Execute the Plan
 
-Work through tasks in `PLAN.md` one at a time. Implement, verify, check off. Never skip verification. Never mark a task done without testing it.
+Work through tasks in `.cli/PLAN.md` one at a time. Implement, verify, commit, check off. Never batch tasks. Never mark done without verification. Never push to remote.
 
 ## Context loaded at runtime
 
-Project path from arguments: `$ARGUMENTS`
-
+Project path: `$ARGUMENTS`
 Current directory: !`pwd`
 
 ---
 
 ## Step 0 — Find the plan
 
-If `$ARGUMENTS` contains a path, look for `PLAN.md` there. Otherwise check the current directory.
+Look for `.cli/PLAN.md` at the path from `$ARGUMENTS`, or the current directory.
 
-If no `PLAN.md` exists:
+If missing:
 ```
-No PLAN.md found. Run /audit-cli [path] first to generate one, then come back here.
+No .cli/PLAN.md found at [path].
+Run /audit-cli [path] to generate one, then come back.
 ```
 
-Read the full `PLAN.md` before doing anything else.
+Read the full `.cli/PLAN.md` and `.cli/CONTEXT.md` before doing anything.
 
 ---
 
-## Step 1 — Show the current state
-
-After reading PLAN.md, display a summary:
+## Step 1 — Show progress and confirm next task
 
 ```
-PLAN.md found — [project name]
-Audited: [date]
-Progress: [X] of [N] tasks complete
+[project-name] — [X] of [N] tasks complete
 
-Next up:
-  ☐ [first unchecked task] — [description]
+Ready to work on:
+  ☐ [first unchecked task from "Build next"] — [description]
 
-Coming after that:
-  ☐ [second unchecked task]
-  ☐ [third unchecked task]
+After that:
+  ☐ [second task]
+  ☐ [third task]
 
-Proceed with "[first task name]"? (yes / skip / pick different task)
+Proceed? (yes / skip this one / pick a different task / stop)
 ```
-
-Wait for confirmation before writing any code.
 
 ---
 
-## Step 2 — Implement the task
+## Step 2 — Implement
 
-For the confirmed task:
+Determine the task type from its label (`feat`, `fix`, `refactor`, `test`, `docs`, `chore`) and apply the right approach:
 
-**If it's a code fix (bug, crash, bad pattern):**
-1. Read the affected file(s) fully before editing
-2. Make the minimal change that fixes the issue — don't refactor surrounding code
-3. If fixing a source that throws: replace `throw` with `return sourceError(...)` and add the import
-4. If fixing hardcoded model IDs: create/update `src/models.ts`, replace all occurrences, verify imports
+**`fix` — correcting broken behavior:**
+Read the affected files fully before editing. Make the minimal change. Don't refactor surrounding code.
+- Hardcoded model ID → update `src/models.ts`, grep for all occurrences, replace with `MODELS.fast.id` / `MODELS.smart.id`
+- Source throws → replace `throw` with `return sourceError(source, label, err)`, add import
+- `cli.ts` too long → extract business logic to a new module, leave router lean
 
-**If it's a new file (missing configure.ts, models.ts, tests, etc.):**
-1. Check if a reference exists in `${CLAUDE_SKILL_DIR}/../new-cli/examples/` — read it and adapt
-2. Write the complete file — no placeholders or TODO comments
-3. Verify imports from the new file are added wherever needed
+**`feat` — new file or capability:**
+Check `.cli/CONTEXT.md` to understand architecture. Check `${CLAUDE_SKILL_DIR}/assets/` for reference patterns. Write the complete file — no stubs.
 
-**If it's a refactor (cli.ts too long, hud.ts needs splitting):**
-1. Read the full file before splitting
-2. Identify the split boundary — usually a complete screen function or command handler
-3. Extract to the new file, update the import in the original
-4. Confirm the entry point still calls the right function
+**`refactor` — restructuring without behavior change:**
+Read the full file before splitting. Extract to a new file at a clean boundary. Update all imports. Confirm the entry point still calls the right function.
 
-**If it's a test:**
-1. Read the existing test file if one exists
-2. Follow the same mock/fixture pattern already in use
-3. Write the test to cover the specific case mentioned in the plan — not a general suite
+**`test` — adding or fixing tests:**
+Read existing test files first. Follow the same mock/fixture pattern already in use. Test the specific case from the task — not a general suite.
+
+**`docs` — CLAUDE.md, README, comments:**
+Read `.cli/CONTEXT.md` and `.cli/DECISIONS.md` first. Keep CLAUDE.md under 80 lines. Accurate > comprehensive.
+
+**`chore` — config, gitignore, manifest:**
+Make the minimal change. No scope creep.
 
 ---
 
 ## Step 3 — Verify
 
-After every implementation:
+After every implementation — always run in order:
 
-**Always run:**
+1. Type check (if TypeScript was touched):
 ```bash
-cd [project-path] && bun --version && echo "bun ok"
+cd [project-path] && bun typecheck 2>&1 | head -30
 ```
 
-**If code was changed:**
+2. Tests (if tests exist or were added):
 ```bash
-cd [project-path] && bun typecheck 2>&1 | head -20
+bun test 2>&1 | tail -20
 ```
 
-**If tests exist or were added:**
-```bash
-cd [project-path] && bun test 2>&1 | tail -20
-```
-
-**If the main entry was touched:**
-Ask the user: "Can you run `bun hud` and confirm it starts up?" — don't assume it works.
+3. Entry point (if src/cli.ts, src/hud.ts, or cli/App.tsx was touched):
+Ask the user: "Can you run `bun hud` and confirm it starts?" — don't assume it works.
 
 If any check fails, fix it before marking the task done.
 
 ---
 
-## Step 4 — Check off the task and commit
+## Step 4 — Commit and check off
 
-Edit `.cli/PLAN.md` in the project:
-- Change `- [ ] **[task]**` to `- [x] **[task]**`
-- Update the status line: `Status: [X+1] of [N] tasks complete`
+Pick the commit prefix from the task label:
 
-Commit the work:
+| Label | Prefix | Example |
+|-------|--------|---------|
+| `feat` | `feat:` | `feat: add Reddit source` |
+| `fix` | `fix:` | `fix: move model IDs to models.ts` |
+| `refactor` | `refactor:` | `refactor: split hud.ts into screen functions` |
+| `test` | `test:` | `test: add configure loadEnv test` |
+| `docs` | `docs:` | `docs: update CLAUDE.md architecture section` |
+| `chore` | `chore:` | `chore: add output/ to .gitignore` |
+
 ```bash
-cd [project-path] && git add -A && git commit -m "fix: [task name]"
+cd [project-path] && git add -A && git commit -m "[prefix]: [task name]"
 ```
 
-Do not push. The user decides when to push to remote.
+Then edit `.cli/PLAN.md`:
+- Change `- [ ] **[task]**` → `- [x] **[task]**`
+- Update the status line: `Status: [X+1] of [N] tasks complete`
 
-Then show the user:
+Do not push to remote. The user decides when to push.
+
+---
+
+## Step 5 — Continue or stop
+
+Show the user:
 
 ```
 ✓ Done: [task name]
 
 Progress: [X] of [N] complete
 
-Next task:
+Next:
   ☐ [next unchecked task] — [description]
 
-Continue? (yes / skip this one / stop for now)
+Continue? (yes / skip / stop for now)
 ```
 
----
+**skip** → mark task as `- [~] **[task]**` (deferred) and move to the next.
+**stop** → "Resume with `/fix-cli [path]` when you're ready to continue."
 
-## Step 5 — Continue or stop
-
-**If user says yes:** loop back to Step 2 with the next unchecked task.
-
-**If user says skip:** mark the task with `- [~]` (deferred) and move to the next.
-
-**If user says stop:** summarize what was completed this session and remind them to run `/fix-cli [path]` to resume.
-
-**If all tasks are complete:**
+**All tasks complete:**
 ```
-✓ All tasks complete.
+✓ All [N] tasks complete — [project-name] is ready.
 
-[project-name] is ready. Here's what was done:
-[bulleted list of completed tasks]
+Completed:
+[bulleted list of done tasks]
 
-Consider running /audit-cli [path] again to check if anything new came up during implementation.
+Run /audit-cli [path] again to check if anything new surfaced during implementation.
 ```
 
 ---
 
 ## Rules
 
-- Read before writing. Always read the full file before editing any part of it.
-- One task at a time. Never batch two tasks into one step.
-- No scope creep. If you notice something outside the current task, add it to PLAN.md as a new item — don't fix it now.
-- Ask before destructive changes. If a task requires deleting or renaming files, confirm first.
-- Never mark done without verification. If the verify step can't run (no Bun, wrong directory), flag it and ask the user to confirm manually.
+- **Read before writing.** Always read the full file before editing.
+- **One task at a time.** Never batch.
+- **No scope creep.** Notice something else? Add it to `## Later` in PLAN.md, don't fix it now.
+- **Confirm before destructive changes.** Deleting or renaming files requires user confirmation.
+- **Ideas section is not tasks.** Skip the `## Ideas` section — those are discussions, not work items.
+- **Never push.** `git push` only happens when the user explicitly requests it.

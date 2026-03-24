@@ -1,6 +1,6 @@
 ---
 name: new-cli
-description: Use this skill when the user wants to build a new CLI tool, says "build a new CLI", "create a CLI", "I need a terminal tool for X", "start a CLI project", or asks to scaffold a Bun/Ink/ANSI command-line application. Also use when extending an existing CLI with new capabilities.
+description: Use this skill when the user wants to build a new CLI tool, says "build a new CLI", "create a CLI", "I need a terminal tool for X", "start a CLI project", or asks to scaffold a Bun/Ink/ANSI command-line application. Also use when extending an existing CLI.
 argument-hint: "[project-name or path]"
 model: sonnet
 effort: high
@@ -8,178 +8,188 @@ context: fork
 allowed-tools: Read, Write, Edit, Glob, Grep, LS, Bash
 ---
 
-# New CLI — Plan, Scaffold, and Verify
+# New CLI — Plan, Scaffold, Verify
 
-Build a new CLI project through three phases: plan with the user, scaffold the code, verify it runs. Never scaffold before the plan is confirmed.
+Three phases: plan with the user first, then scaffold exactly what the plan specifies, then verify it runs. Never scaffold before the plan is confirmed.
 
 ## Context loaded at runtime
 
 Directory: !`pwd`
+Bun: !`bun --version 2>/dev/null || echo "NOT INSTALLED"`
+Git: !`git rev-parse --is-inside-work-tree 2>/dev/null && echo "repo exists" || echo "no repo"`
+Existing package.json: !`[ -f package.json ] && python3 -c 'import json; d=json.load(open("package.json")); print(d.get("name","?"))' 2>/dev/null || echo "none"`
 
-Environment:
-!`echo "bun: $(bun --version 2>/dev/null || echo 'NOT INSTALLED')" && echo "git: $(git rev-parse --is-inside-work-tree 2>/dev/null && echo 'repo exists' || echo 'no repo')" && echo "existing package.json: $([ -f package.json ] && python3 -c 'import json; d=json.load(open(\"package.json\")); print(d.get(\"name\",\"?\"))' 2>/dev/null || echo none)"`
-
-References available:
-!`echo "guides: $(ls ${CLAUDE_SKILL_DIR}/../../guides/ 2>/dev/null | tr '\n' ' ')" && echo "examples: $(ls ${CLAUDE_SKILL_DIR}/examples/ 2>/dev/null | tr '\n' ' ')"`
+Rules available: !`ls "${CLAUDE_SKILL_DIR}/../../rules/" 2>/dev/null || ls "${CLAUDE_SKILL_DIR}/../../rules/" 2>/dev/null`
+Assets available: !`ls "${CLAUDE_SKILL_DIR}/assets/" 2>/dev/null || ls "${CLAUDE_SKILL_DIR}/assets/" 2>/dev/null`
 
 ---
 
-## Phase 1 — Plan
+## Phase 1 — Environment check
 
-### Step 1a — Handle arguments + environment
+Before anything else:
 
-- If `$ARGUMENTS` is a project name: use it, skip to Step 1b
-- If `$ARGUMENTS` is a path to an existing project: run `cli-explorer` on it first, use findings to pre-answer the planning interview, then continue
-- If Bun is not installed: tell the user now — "Bun is required. Should I install it? (`curl -fsSL https://bun.sh/install | bash`)" — wait for yes before running
-- If a `package.json` already exists here: "There's already a project named `[name]` here. Are we extending this or starting in a new subfolder?"
+- **Bun not installed** → "Bun is required for all Propane CLIs. Should I install it? (runs `curl -fsSL https://bun.sh/install | bash`)" — wait for yes.
+- **Existing package.json** → "There's already a project here (`[name]`). Are we extending this project or starting in a new subfolder?"
+- **`$ARGUMENTS` is a path to an existing project** → run `cli-explorer` on it, use findings in the planning interview to skip questions already answered by the existing code.
+- **`$ARGUMENTS` is a project name** → use it, skip the name question in the interview.
 
-### Step 1b — Run the planning interview
+---
+
+## Phase 2 — Plan (cli-planner agent)
 
 Launch the `cli-planner` agent. Pass it:
-- The user's stated goal or project name from `$ARGUMENTS`
-- Any findings from the explorer (if extending an existing project)
-- The current directory path
+- The user's goal or project name (from `$ARGUMENTS` or from context)
+- Any `cli-explorer` findings (if extending an existing project)
+- The current directory
 
-The planner will conduct a goal-driven interview, make architecture recommendations, write `.cli/CONTEXT.md`, `.cli/DECISIONS.md`, and `.cli/PLAN.md`, and return a structured `PLAN_COMPLETE` summary.
+The planner conducts a goal-driven interview, recommends architecture, confirms with the user, then writes `.cli/CONTEXT.md`, `.cli/DECISIONS.md`, and `.cli/PLAN.md`.
 
-**Wait for the planner to return `PLAN_COMPLETE` before continuing.**
-
----
-
-## Phase 2 — Dependency setup
-
-After receiving `PLAN_COMPLETE`, show the user what will be installed based on the plan:
-
-```
-Here's what this project needs:
-
-  ✓ bun (runtime)                     [already installed / needs install]
-  ✓ @anthropic-ai/sdk                 [if AI: yes]
-  ✓ ink ^5 + react ^19                [if interface: wizard]
-  ✓ ink-text-input ^6                 [if interface: wizard]
-  ✓ @modelcontextprotocol/sdk         [if distribution: mcp]
-
-Should I create the project folder and run `bun install`?
-I'll write package.json first — you can review before I install anything.
-```
-
-Wait for explicit confirmation ("yes" / "go ahead" / "do it") before running `bun install`.
-
-On confirmation:
-1. `mkdir -p <name>` — create project folder
-2. Write `package.json` first (user can review)
-3. `cd <name> && bun install`
-4. `git init && git add package.json bun.lockb && git commit -m "chore: init project"`
+**Wait for `PLAN_COMPLETE` before continuing.**
 
 ---
 
-## Phase 3 — Scaffold
+## Phase 3 — Dependency setup
 
-Generate files in this order. Show the filename before writing each one. Write each completely — no `// TODO` stubs.
+After `PLAN_COMPLETE`, read the fields and show what will be installed:
 
-**Always (every project):**
-1. `CLAUDE.md` — references `.cli/` for context, lists run command and architecture
+```
+Based on your plan, here's what this project needs:
+
+  bun (runtime)                  [installed ✓ / needs install]
+  @anthropic-ai/sdk              [if ai ≠ none and ≠ piped]
+  ink ^5 + react ^19             [if interface = wizard or hybrid]
+  ink-text-input ^6              [if interface = wizard or hybrid]
+  @modelcontextprotocol/sdk      [if distribution includes mcp]
+
+Create `[name]/` and run `bun install`? (yes / no)
+```
+
+On yes:
+```bash
+mkdir -p [name] && cd [name]
+# write package.json first (see below), then:
+bun install
+git init
+git add package.json bun.lockb
+git commit -m "chore: init [name]"
+```
+
+---
+
+## Phase 4 — Scaffold
+
+Read the `PLAN_COMPLETE` fields. Use this exact mapping to decide what to generate:
+
+| PLAN_COMPLETE field | Value | Files to generate |
+|---------------------|-------|-------------------|
+| `interface` | `hud` | `src/hud.ts` (from assets/hud.ts, adapted) |
+| `interface` | `wizard` | `cli/index.tsx`, `cli/App.tsx`, `cli/components/Frame.tsx`, `cli/components/SelectList.tsx`, `cli/components/TextInput.tsx`, `tsconfig.json` |
+| `interface` | `commands` | `src/cli.ts` only (no hud.ts, no cli/ folder) |
+| `interface` | `hybrid` | Both `src/hud.ts` AND `cli/` folder |
+| `ai` | `fast` | `src/models.ts` with fast tier only |
+| `ai` | `smart` | `src/models.ts` with smart tier only |
+| `ai` | `both` | `src/models.ts` with fast + smart tiers |
+| `ai` | `piped` | No models.ts — add note in CLAUDE.md |
+| `ai` | `none` | No models.ts, no @anthropic-ai/sdk |
+| `sources` | any list | `src/sources/types.ts` + one `src/sources/<name>.ts` per item |
+| `output` | includes `browser` | `src/server.ts` + `ui/index.html` |
+| `distribution` | includes `mcp` | `src/mcp.ts` |
+| `distribution` | includes `global` | Add `"bin": {"[name]": "src/cli.ts"}` to package.json |
+
+**Generate files in this order.** Show the filename before writing each. Write complete files — no `// TODO` stubs.
+
+1. `CLAUDE.md` — references `.cli/CONTEXT.md`; lists `bun hud` as entry; summarizes architecture
 2. `.gitignore` — node_modules, .env, output/, .propane/, .cache/, .fonts/
-3. `.env.example` — one line per required key with a description comment
-4. `manifest.json` — capabilities: commands, ai tiers, sources, browser, mcp
-5. `src/models.ts` — only the tiers from the plan (see examples/models.ts)
-6. `src/configure.ts` — copy verbatim from examples/configure.ts
-7. `src/cli.ts` — command router, under 80 lines
+3. `.env.example` — one line per required key with a `# description` comment above each
+4. `package.json` — scripts: hud, test, and optionally mcp/serve/run
+5. `src/models.ts` — only the tiers from PLAN_COMPLETE (read `assets/models.ts`)
+6. `src/configure.ts` — copy verbatim from `assets/configure.ts`
+7. `src/cli.ts` — routes to hud/wizard/run; under 80 lines
+8. Interface files (per mapping above) — read assets/ for reference, adapt for this project
+9. Source files (per mapping above)
+10. Server + UI (per mapping above)
+11. MCP server (per mapping above)
+12. `tests/cli.test.ts` — bun:test covering configure, models, at least one source
 
-**If interface = hud:**
-- `src/hud.ts` — ANSI screen loop with ASCII art header
-  - Read `examples/hud.ts` and adapt it for this project's menu items
-  - Add `process.stdout.on('resize', redraw)` — see guide 08
-  - Width-safe: use `Math.min(process.stdout.columns ?? 80, 66)` not hardcoded numbers
+**For HUD-style `src/hud.ts`:**
+- Read `assets/hud.ts` and adapt menu items to match this project
+- Add `process.stdout.on('resize', redraw)` — required, see cli-ux rules
+- Use `Math.min(process.stdout.columns ?? 80, 66)` for all widths — no hardcoded column counts
+- Minimum-width guard: if terminal < 50 cols, show a message instead of a broken layout
 
-**If interface = wizard:**
-- `cli/index.tsx` — `render(<App />)`
-- `cli/App.tsx` — step state machine with NEXT/PREV maps (see examples/App.tsx)
-- `cli/components/Frame.tsx` — copy from examples/Frame.tsx
-- `cli/components/SelectList.tsx` — copy from examples/SelectList.tsx
-- `cli/components/TextInput.tsx` — wraps ink-text-input with ← back support
-- `tsconfig.json` — jsx: react-jsx, jsxImportSource: react
+**For Wizard-style `cli/App.tsx`:**
+- Read `assets/App.tsx` and extend with this project's actual steps
+- NEXT and PREV maps must cover every step — no dead ends
+- Every step component gets exactly `onNext(value)` and `onBack()` — nothing else
 
-**If sources (external APIs):**
-- `src/sources/types.ts` — copy from examples/sources/types.ts
-- `src/sources/<api>.ts` — one stub per source from the plan
-
-**If output = browser:**
-- `src/server.ts` — Bun.serve with /events SSE, /health, /message POST
-- `ui/index.html` — copy the template from guides/ui-patterns.md, replace CLI_NAME
-
-**If distribution = mcp:**
-- `src/mcp.ts` — copy from guides/mcp-patterns.md template
-
-**Always last:**
-- `tests/cli.test.ts` — bun:test for configure (env loading), models (export shape), at least one source round-trip
-
-Commit after scaffold:
+Commit:
 ```bash
-git add -A && git commit -m "feat: scaffold [name] — [interface] interface, [AI tier] AI, [sources]"
+git add -A && git commit -m "feat: scaffold [name] ([interface] / [ai] / [sources or no sources])"
 ```
 
 ---
 
-## Phase 4 — Quality review
+## Phase 5 — Quality review
 
-Launch two `cli-reviewer` agents in parallel:
-- `cli-reviewer correctness` — broken imports, bad paths, missing types, env vars used before load
-- `cli-reviewer conventions` — models.ts, SourceResult, no DB patterns, .propane/ gitignored
+Launch in parallel:
+- `cli-reviewer correctness` — broken imports, wrong paths, missing types, env loaded late
+- `cli-reviewer conventions` — models.ts, SourceResult, gitignore, no DB patterns
 
-Apply every fix. Commit fixes:
+Apply every fix. Commit:
 ```bash
-git add -A && git commit -m "fix: apply reviewer corrections"
+git add -A && git commit -m "fix: reviewer corrections"
 ```
 
 ---
 
-## Phase 5 — Verify
+## Phase 6 — Verify
 
 ```bash
-cd <project-path> && bun hud
+cd [project-path] && bun hud
 ```
 
-If it crashes, read the error and fix it. Do not present a broken project as done.
+If it crashes, read the error and fix it. Do not mark done with a broken entry point.
 
-Run tests:
 ```bash
 bun test
 ```
 
 ---
 
-## Phase 6 — Ship checklist
+## Phase 7 — Ship checklist
 
-Present this to the user. Do not claim done until all pass:
-
-- [ ] `bun hud` starts without errors
-- [ ] Main menu renders with correct items
-- [ ] Arrow keys navigate, `ctrl+c` exits cleanly (cursor restored)
-- [ ] ASCII art renders (HUD) or Frame title shows (Wizard)
-- [ ] At least one menu item / wizard step does real work
+- [ ] `bun hud` starts, main screen renders
+- [ ] Arrow keys navigate, `ctrl+c` exits cleanly and restores cursor
+- [ ] ANSI HUD: resize terminal — layout adapts, doesn't corrupt
+- [ ] Wizard: Frame shows correct progress dots for each step
+- [ ] At least one menu item or step does real work (not just a placeholder)
 - [ ] All tests pass with `bun test`
-- [ ] `.env.example` lists every required key with a comment
+- [ ] `.env.example` documents every required key
 - [ ] `output/` and `.propane/` are in `.gitignore`
-- [ ] `.cli/` folder exists with CONTEXT.md, DECISIONS.md, PLAN.md
-- [ ] If browser: `bun serve` opens and shows "connected"
-- [ ] If MCP: `src/mcp.ts` runs and CLAUDE.md has registration instructions
-- [ ] If ANSI HUD: resize terminal — layout should adapt, not break
+- [ ] `.cli/CONTEXT.md`, `.cli/DECISIONS.md`, `.cli/PLAN.md` exist
+- [ ] `CLAUDE.md` accurately describes the architecture
+- [ ] If browser: `bun serve` opens and status shows "connected"
+- [ ] If MCP: `src/mcp.ts` runs, `CLAUDE.md` has registration instructions
 
 Final commit:
 ```bash
-git add -A && git commit -m "chore: ready for first run"
+git add -A && git commit -m "chore: ready for first run — [name]"
 ```
 
-Do not push to remote. Tell the user: "Run `git push` when you're ready to share this."
+Do not push. Tell the user: "Run `git push` when you're ready to share this."
 
 ---
 
-## Reference
+## Rules reference
 
-- UX patterns (resize, navigation, feedback, error messages): `${CLAUDE_SKILL_DIR}/../../guides/cli-ux.md`
-- Folder structure: `${CLAUDE_SKILL_DIR}/../../guides/folder-structure.md`
-- UI templates: `${CLAUDE_SKILL_DIR}/../../guides/ui-patterns.md`
-- Data philosophy: `${CLAUDE_SKILL_DIR}/../../guides/data-philosophy.md`
-- MCP patterns: `${CLAUDE_SKILL_DIR}/../../guides/mcp-patterns.md`
-- Example files: `${CLAUDE_SKILL_DIR}/examples/`
+Read these when generating the corresponding files:
+
+- HUD screen loop, resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/how-to-hud-screen.md`
+- Wizard steps, Frame, progress dots: `${CLAUDE_SKILL_DIR}/../../rules/how-to-wizard-step.md`
+- Gentle terminal output, streaming, piping: `${CLAUDE_SKILL_DIR}/../../rules/how-to-gentle-terminal.md`
+- SourceResult, error handling: `${CLAUDE_SKILL_DIR}/../../rules/how-to-source-result.md`
+- Model tiers, caching: `${CLAUDE_SKILL_DIR}/../../rules/how-to-models.md`
+- Browser view, SSE: `${CLAUDE_SKILL_DIR}/../../rules/how-to-browser-view.md`
+- MCP server: `${CLAUDE_SKILL_DIR}/../../rules/how-to-mcp-server.md`
+- Flat file storage: `${CLAUDE_SKILL_DIR}/../../rules/how-to-flat-files.md`
+- Conventions: `${CLAUDE_SKILL_DIR}/../../rules/conventions.md`
