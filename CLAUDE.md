@@ -13,8 +13,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 skills/
   new-cli/SKILL.md          — /new-cli: plan then scaffold a new CLI
-    examples/               — copy-paste reference files (hud.ts, App.tsx, Frame.tsx, etc.)
-  audit-cli/SKILL.md        — /audit-cli: review existing CLI → .cli/PLAN.md
+    assets/                 — copy-paste reference files (hud.ts, App.tsx, Frame.tsx, etc.)
+  audit-cli/SKILL.md        — /audit-cli: review existing CLI → .cli/ folder
   fix-cli/SKILL.md          — /fix-cli: execute .cli/PLAN.md one task at a time with commits
 
 agents/
@@ -23,15 +23,8 @@ agents/
   cli-architect.md          — architecture design (minimal vs modular)
   cli-reviewer.md           — code review (correctness / completeness / conventions)
 
-rules/
-  folder-structure.md       — canonical layout, .cli/ folder, naming, file size rules
-  ui-patterns.md            — HTML template, dark palette, SSE bridge
-  file-browser-bridge.md    — Bun fs.watch → SSE → browser → POST back
-  data-philosophy.md        — no databases, flat files, Claude as query layer
-  mcp-patterns.md           — MCP server template, path safety, Claude Desktop setup
-  plugin-ecosystem.md       — external plugins worth composing
-  claude-code-patterns.md   — streaming, multi-agent, hooks, status bar, image input
-  cli-ux.md                 — navigation, feedback, resize handling, error messages, UX checklist
+rules/                      — 42 subject-named rules with frontmatter + prerequisites
+  (see full list below)
 
 hooks/
   hooks.json                — convention check (scoped to CLI projects) + session reminder
@@ -48,7 +41,7 @@ Every generated project gets a `.cli/` folder that Claude Code reads as context:
 
 ## Working here
 
-No build step. Edit markdown and JSON files directly. When adding a guide, use a task-based name (`feature-name.md`) not a numbered prefix. Update references in both SKILL.md files and this CLAUDE.md.
+No build step. Edit markdown and JSON files directly. When adding a rule, use a subject name (`topic.md`) — never `how-to-` prefix or numbers. Every rule must have frontmatter (`name`, `description`, `metadata.tags`) and a Prerequisites block.
 
 ## Key conventions enforced
 
@@ -57,3 +50,23 @@ No build step. Edit markdown and JSON files directly. When adding a guide, use a
 - No databases — flat files + Claude as query layer
 - `bun hud` — always the entry command
 - ANSI HUDs must handle terminal resize via `process.stdout.on('resize', redraw)`
+
+## Rules index
+
+**Foundation:** `folder-structure` · `conventions` · `environment-setup` · `configuration`
+
+**UI Structure:** `hud-screens` · `wizard-steps` · `layouts` · `alternate-screen` · `hybrid-interface`
+
+**UI Components:** `colors` · `ascii-art` · `spinners` · `display-system` · `tables` · `tabs` · `keyboard-shortcuts` · `confirmation`
+
+**UI Behavior:** `gentle-terminal` · `rich-input` · `parallelization` · `clipboard` · `notifications`
+
+**Data & Sources:** `source-results` · `flat-files` · `output-files` · `caching` · `limits` · `retry`
+
+**AI:** `models` · `token-spend` · `stream-to-agents`
+
+**Infrastructure:** `logging` · `error-recovery` · `testing` · `update-checker` · `global-install`
+
+**Integration:** `browser-views` · `file-watch` · `mcp-servers` · `workspace-settings` · `plugin-ecosystem`
+
+**Output:** `diff-output`

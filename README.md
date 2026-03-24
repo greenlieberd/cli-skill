@@ -141,7 +141,7 @@ A pre-tool-use hook warns when generated code violates these conventions.
 
 skills/
   new-cli/SKILL.md          — /new-cli: plan + scaffold
-    examples/               — copy-paste reference files
+    assets/                 — copy-paste reference files
       hud.ts                  complete ANSI HUD with spinner, resize handling
       App.tsx                 Ink wizard state machine
       Frame.tsx               progress dots + border
@@ -150,7 +150,7 @@ skills/
       models.ts               model tier setup
       configure.ts            loadEnv + maskValue (copy verbatim)
       package.json            annotated deps
-  audit-cli/SKILL.md        — /audit-cli: review → .cli/PLAN.md
+  audit-cli/SKILL.md        — /audit-cli: review → .cli/ folder
   fix-cli/SKILL.md          — /fix-cli: execute plan items with commits
 
 agents/
@@ -159,15 +159,7 @@ agents/
   cli-architect.md          — architecture blueprint (minimal vs modular)
   cli-reviewer.md           — code review (correctness / completeness / conventions)
 
-rules/
-  folder-structure.md       — canonical layout including .cli/ folder
-  ui-patterns.md            — HTML template, dark palette, SSE bridge
-  file-browser-bridge.md    — Bun fs.watch → SSE → browser → POST
-  data-philosophy.md        — no databases, flat files, Claude as query layer
-  mcp-patterns.md           — MCP server template, Claude Desktop setup
-  plugin-ecosystem.md       — external plugins worth composing
-  claude-code-patterns.md   — streaming, multi-agent, hooks, status bar
-  cli-ux.md                 — navigation, resize handling, feedback, error messages
+rules/                      — 42 subject-named rules (colors, retry, testing, tables, etc.)
 
 hooks/
   hooks.json                — convention check (scoped to CLI projects)

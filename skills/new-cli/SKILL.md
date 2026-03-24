@@ -184,12 +184,19 @@ Do not push. Tell the user: "Run `git push` when you're ready to share this."
 
 Read these when generating the corresponding files:
 
-- HUD screen loop, resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/how-to-hud-screen.md`
-- Wizard steps, Frame, progress dots: `${CLAUDE_SKILL_DIR}/../../rules/how-to-wizard-step.md`
-- Gentle terminal output, streaming, piping: `${CLAUDE_SKILL_DIR}/../../rules/how-to-gentle-terminal.md`
-- SourceResult, error handling: `${CLAUDE_SKILL_DIR}/../../rules/how-to-source-result.md`
-- Model tiers, caching: `${CLAUDE_SKILL_DIR}/../../rules/how-to-models.md`
-- Browser view, SSE: `${CLAUDE_SKILL_DIR}/../../rules/how-to-browser-view.md`
-- MCP server: `${CLAUDE_SKILL_DIR}/../../rules/how-to-mcp-server.md`
-- Flat file storage: `${CLAUDE_SKILL_DIR}/../../rules/how-to-flat-files.md`
+- HUD screen loop, resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`
+- Wizard steps, Frame, progress dots: `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md`
+- Gentle terminal output, streaming, piping: `${CLAUDE_SKILL_DIR}/../../rules/gentle-terminal.md`
+- SourceResult, error handling: `${CLAUDE_SKILL_DIR}/../../rules/source-results.md`
+- Model tiers, streaming, caching: `${CLAUDE_SKILL_DIR}/../../rules/models.md`
+- Browser view, SSE: `${CLAUDE_SKILL_DIR}/../../rules/browser-views.md`
+- MCP server: `${CLAUDE_SKILL_DIR}/../../rules/mcp-servers.md`
+- Flat file storage: `${CLAUDE_SKILL_DIR}/../../rules/flat-files.md`
+- Colors, ANSI palette: `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
+- Display system (spinner, done/skip/fail): `${CLAUDE_SKILL_DIR}/../../rules/display-system.md`
+- Error recovery, crash handling: `${CLAUDE_SKILL_DIR}/../../rules/error-recovery.md`
+- Environment setup, .env loading: `${CLAUDE_SKILL_DIR}/../../rules/environment-setup.md`
+- Configuration wizard: `${CLAUDE_SKILL_DIR}/../../rules/configuration.md`
+- Retry + backoff: `${CLAUDE_SKILL_DIR}/../../rules/retry.md`
+- Testing, mock fetch: `${CLAUDE_SKILL_DIR}/../../rules/testing.md`
 - Conventions: `${CLAUDE_SKILL_DIR}/../../rules/conventions.md`
