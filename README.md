@@ -18,23 +18,37 @@ Three skills:
 
 ## Install
 
-### Option A — Install directly from GitHub
-
-```bash
-claude plugin install git@github.com:greenlieberd/cli-skill.git
-```
-
-### Option B — Clone and install locally
+### Option A — Clone and install (recommended)
 
 ```bash
 git clone git@github.com:greenlieberd/cli-skill.git
 claude plugin install ./cli-skill
 ```
 
-### Option C — Install from a local path (for development)
+### Option B — Install from a local path (for development)
 
 ```bash
 claude plugin install /path/to/cli-skill
+```
+
+### Option C — Install via marketplace (team setup)
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "propane-plugins": {
+      "source": { "source": "github", "repo": "greenlieberd/cli-skill" }
+    }
+  }
+}
+```
+
+Then install by name:
+
+```bash
+claude plugin install propane-cli-skill@propane-plugins
 ```
 
 After installing, verify the skills are available:
