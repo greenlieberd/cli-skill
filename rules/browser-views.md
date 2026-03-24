@@ -1,4 +1,11 @@
-# Guide 02 — UI Patterns
+---
+name: browser-views
+description: Serving generated content in a local browser window from a Bun HTTP server with SSE.
+metadata:
+  tags: browser, server, html, sse, output
+---
+
+# Browser Views
 
 Propane CLIs have two display modes: **terminal** (always present) and **browser** (optional, launched on demand). The browser view is a disposable HTML file — never a separate app.
 

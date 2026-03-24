@@ -1,4 +1,11 @@
-# How to Use AI Models
+---
+name: models
+description: Model tier selection (Haiku/Sonnet/Opus), src/models.ts convention, streaming, caching, and two-tier patterns.
+metadata:
+  tags: models, claude, haiku, sonnet, streaming, tokens
+---
+
+# Models
 
 > Prerequisites: `@anthropic-ai/sdk` installed, `ANTHROPIC_API_KEY` in `.env`, `src/models.ts` and `src/configure.ts` in the project.
 

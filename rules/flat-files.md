@@ -1,4 +1,11 @@
-# Guide 04 — Data Philosophy
+---
+name: flat-files
+description: No databases — using flat JSON/JSONL files and Claude as the query layer.
+metadata:
+  tags: data, storage, flat-files, json, jsonl
+---
+
+# Flat Files
 
 Propane CLIs do not have local databases. They do not have schemas, ORMs, migrations, or query layers. When you feel the urge to reach for SQLite, a JSON store, or any persistence abstraction — stop. Read this guide.
 

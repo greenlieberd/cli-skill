@@ -1,4 +1,11 @@
-# Guide 05 — MCP Patterns
+---
+name: mcp-servers
+description: Adding an MCP stdio server to a CLI so it can be queried from Claude Desktop.
+metadata:
+  tags: mcp, server, claude-desktop, tools, stdio
+---
+
+# MCP Servers
 
 Add an MCP server when your CLI produces output that an agent should be able to query — reports, battlecards, content drafts, run history. The MCP server is a thin read layer over the flat files that already exist.
 

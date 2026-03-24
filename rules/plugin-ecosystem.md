@@ -1,4 +1,11 @@
-# Guide 06 — Plugin Ecosystem
+---
+name: plugin-ecosystem
+description: External Claude Code plugins worth composing with — what they do and when to use them.
+metadata:
+  tags: plugins, ecosystem, claude-code, integrations
+---
+
+# Plugin Ecosystem
 
 The Claude Code plugin ecosystem has 8,000+ indexed repos. This guide covers what's worth installing, how to evaluate any plugin, and how to compose external skills into your own workflows.
 

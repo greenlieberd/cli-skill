@@ -1,4 +1,11 @@
-# How to Build a Wizard Step
+---
+name: wizard-steps
+description: Ink Wizard architecture — Frame, SelectList, MultiSelectList, TextInput, and App state machine.
+metadata:
+  tags: wizard, ink, react, steps, terminal-ui
+---
+
+# Wizard Steps
 
 > Platform: macOS. Uses Ink (React for CLI) and `useInput` from the Ink library.
 

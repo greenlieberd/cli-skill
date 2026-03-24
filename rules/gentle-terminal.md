@@ -1,4 +1,11 @@
-# How to Build a Gentle Terminal UI
+---
+name: gentle-terminal
+description: Progressive output, streaming Claude tokens, and keeping the terminal from flooding or flickering.
+metadata:
+  tags: terminal, output, streaming, ux, progressive
+---
+
+# Gentle Terminal
 
 > Platform: macOS (Terminal.app, iTerm2, Warp).
 

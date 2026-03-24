@@ -1,4 +1,11 @@
-# How to Build Terminal Layouts
+---
+name: layouts
+description: Terminal layout patterns — sidebar, split-pane, modal, pinned footer — and macOS constraints.
+metadata:
+  tags: layouts, sidebar, split-pane, modal, footer
+---
+
+# Layouts
 
 > Platform: macOS (Terminal.app, iTerm2, Warp). Tested at 80–220 column widths.
 >

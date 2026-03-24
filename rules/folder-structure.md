@@ -1,4 +1,11 @@
-# Guide 01 — Folder Structure
+---
+name: folder-structure
+description: Canonical directory layout for Bun CLI projects — src/, cli/, output/, .propane/, .cli/.
+metadata:
+  tags: structure, folders, layout, organization
+---
+
+# Folder Structure
 
 Every Propane CLI follows this layout. Deviation requires a reason written in CLAUDE.md.
 

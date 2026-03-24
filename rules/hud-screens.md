@@ -1,4 +1,11 @@
-# Guide 08 — CLI UX Principles
+---
+name: hud-screens
+description: ANSI HUD architecture — navigation, resize handling, screen state machine, UX checklist.
+metadata:
+  tags: hud, ansi, navigation, resize, raw-mode
+---
+
+# HUD Screens
 
 Great CLI tools feel inevitable. Every keypress does what you expect, every wait has a visual anchor, every error tells you what to do next. This guide is the standard. Every generated CLI should pass it.
 

@@ -1,4 +1,11 @@
-# Guide 07 — Claude Code-Quality Patterns
+---
+name: stream-to-agents
+description: Streaming output from a CLI to Claude Code agents via stdout JSON lines and subprocess pipes.
+metadata:
+  tags: streaming, agents, subprocess, pipes, claude-code
+---
+
+# Stream to Agents
 
 This guide covers the patterns that separate a production-quality CLI (like Claude Code itself) from a basic script. These are the things you can't learn from tutorials — they come from studying how Claude Code is actually built.
 

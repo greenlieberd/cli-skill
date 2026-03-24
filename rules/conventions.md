@@ -1,3 +1,10 @@
+---
+name: conventions
+description: Non-negotiable conventions for all Propane CLI projects — models, sources, storage, entry point.
+metadata:
+  tags: conventions, standards, rules, models, sources
+---
+
 # Conventions
 
 > **Platform:** macOS only. These tools use `process.stdout` raw mode, SIGWINCH, and terminal escape sequences — all tested on macOS Terminal and iTerm2. Windows/Linux support is out of scope for now.

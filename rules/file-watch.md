@@ -1,4 +1,11 @@
-# Guide 03 — File ↔ Browser ↔ CLI Bridge
+---
+name: file-watch
+description: Watching files with Bun fs.watch and pushing updates to a browser via SSE.
+metadata:
+  tags: file-watch, sse, browser, live-reload, bun
+---
+
+# File Watch
 
 The pattern: the CLI writes a local file, the browser watches it via SSE, and the browser can write back via HTTP POST. No database. No shared memory. **The file is the truth.**
 

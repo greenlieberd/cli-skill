@@ -1,4 +1,11 @@
-# How to Build a Data Source
+---
+name: source-results
+description: The SourceResult interface — every external data fetch returns a result object, never throws.
+metadata:
+  tags: sources, data, api, error-handling, pattern
+---
+
+# Source Results
 
 > Prerequisites: Bun runtime, `src/sources/types.ts` in the project.
 
