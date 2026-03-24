@@ -33,7 +33,7 @@ if file_path.endswith('.ts') or file_path.endswith('.tsx'):
         if pkg in new_content:
             warnings.append(
                 f'Database package "{pkg.strip()}" detected in {file_path}. '
-                f'Use flat files — see cli-skill/guides/04-data-philosophy.md.'
+                f'Use flat files — see cli-skill/guides/data-philosophy.md.'
             )
 
     # Rule: sources must not throw — check for throw in source files

@@ -19,7 +19,7 @@ Project path from arguments: `$ARGUMENTS`
 Current directory: !`pwd`
 
 Conventions reference (folder structure standard):
-!`cat "${CLAUDE_SKILL_DIR}/../../guides/01-folder-structure.md" 2>/dev/null | head -60`
+!`cat "${CLAUDE_SKILL_DIR}/../../guides/folder-structure.md" 2>/dev/null | head -60`
 
 ---
 

@@ -4,48 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`cli-skill/` is a distributable Claude Code plugin — pure markdown and JSON, no runnable code. It teaches Claude how to build production-quality Propane CLIs using Bun, Ink, and ANSI patterns extracted from `animations/`, `images/`, `pulse/`, `byline/`, and `battlecards/`.
+`cli-skill/` is a distributable Claude Code plugin — pure markdown and JSON, no runnable code. It teaches Claude how to plan, scaffold, audit, and fix production-quality CLI tools using Bun, Ink, and ANSI patterns.
 
 ## Structure
 
 ```
-.claude-plugin/plugin.json        — registers this as a Claude Code plugin
+.claude-plugin/plugin.json
 
 skills/
-  new-cli/SKILL.md                — /new-cli: scaffold a new CLI from scratch
-  audit-cli/SKILL.md              — /audit-cli: review an existing CLI, output PLAN.md
+  new-cli/SKILL.md          — /new-cli: plan then scaffold a new CLI
+    examples/               — copy-paste reference files (hud.ts, App.tsx, Frame.tsx, etc.)
+  audit-cli/SKILL.md        — /audit-cli: review existing CLI → .cli/PLAN.md
+  fix-cli/SKILL.md          — /fix-cli: execute .cli/PLAN.md one task at a time with commits
 
 agents/
-  cli-explorer.md                 — read-only agent: analyzes existing CLI structure
-  cli-architect.md                — designs architecture (minimal vs modular)
-  cli-reviewer.md                 — reviews generated code (correctness / completeness / plan)
-
-hooks/
-  hooks.json                      — PreToolUse convention check + SessionStart context
-  check_conventions.py            — warns on hardcoded model IDs, throwing sources, database imports
-  load_context.sh                 — reminds Claude of CLI rules at session start
+  cli-planner.md            — goal-driven planning interview → .cli/ folder
+  cli-explorer.md           — read-only analysis of existing CLIs
+  cli-architect.md          — architecture design (minimal vs modular)
+  cli-reviewer.md           — code review (correctness / completeness / conventions)
 
 guides/
-  01-folder-structure.md          — canonical layout, naming rules, file size limits
-  02-ui-patterns.md               — HUD vs Wizard, HTML template, dark palette
-  03-file-browser-bridge.md       — Bun fs.watch → SSE → browser → POST back
-  04-data-philosophy.md           — no databases, flat files, Claude as query layer
-  05-mcp-patterns.md              — MCP server template, path safety, Claude Desktop setup
-  06-plugin-ecosystem.md          — curated external plugins, how to compose them
-  07-claude-code-patterns.md      — streaming, multi-agent, hooks, status bar, image input
+  folder-structure.md       — canonical layout, .cli/ folder, naming, file size rules
+  ui-patterns.md            — HTML template, dark palette, SSE bridge
+  file-browser-bridge.md    — Bun fs.watch → SSE → browser → POST back
+  data-philosophy.md        — no databases, flat files, Claude as query layer
+  mcp-patterns.md           — MCP server template, path safety, Claude Desktop setup
+  plugin-ecosystem.md       — external plugins worth composing
+  claude-code-patterns.md   — streaming, multi-agent, hooks, status bar, image input
+  cli-ux.md                 — navigation, feedback, resize handling, error messages, UX checklist
+
+hooks/
+  hooks.json                — convention check (scoped to CLI projects) + session reminder
+  check_conventions.py      — warns on hardcoded model IDs, throwing sources, DB imports
+  load_context.sh           — session reminder, only fires in CLI projects
 ```
 
-## How to work here
+## The .cli/ folder convention
 
-No build step. Edit markdown and JSON files directly. When updating a guide:
-- Check if either SKILL.md references it and update the reference if the filename changed
-- Keep guide numbers sequential; add new guides as `08-`, `09-`, etc.
+Every generated project gets a `.cli/` folder that Claude Code reads as context:
+- `CONTEXT.md` — what the project is, its architecture, and what not to do
+- `DECISIONS.md` — why each architecture choice was made
+- `PLAN.md` — living task list that `/fix-cli` reads and checks off
 
-## Key conventions encoded in the skills
+## Working here
 
-- `src/models.ts` — single source of truth for all model IDs (never hardcode strings)
-- `src/configure.ts` — identical across all projects (loadEnv + maskValue)
-- `src/sources/types.ts` — SourceResult interface; sources return, never throw
-- `.propane/` — runtime state, gitignored; `output/` — generated files, gitignored
-- Two menu styles: ANSI HUD (persistent dashboard) or Ink Wizard (step-by-step flow)
-- `bun hud` is always the entry command
+No build step. Edit markdown and JSON files directly. When adding a guide, use a task-based name (`feature-name.md`) not a numbered prefix. Update references in both SKILL.md files and this CLAUDE.md.
+
+## Key conventions enforced
+
+- `src/models.ts` — model IDs only here
+- `SourceResult` — sources return, never throw
+- No databases — flat files + Claude as query layer
+- `bun hud` — always the entry command
+- ANSI HUDs must handle terminal resize via `process.stdout.on('resize', redraw)`

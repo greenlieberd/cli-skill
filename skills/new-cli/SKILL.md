@@ -8,471 +8,178 @@ context: fork
 allowed-tools: Read, Write, Edit, Glob, Grep, LS, Bash
 ---
 
-# New CLI Scaffold
+# New CLI — Plan, Scaffold, and Verify
 
-Build a new Propane CLI project from scratch using Bun, with either an Ink wizard UI or an ANSI HUD. Follow these steps exactly — do not skip or combine them.
+Build a new CLI project through three phases: plan with the user, scaffold the code, verify it runs. Never scaffold before the plan is confirmed.
 
 ## Context loaded at runtime
 
-Current directory: !`pwd`
+Directory: !`pwd`
 
-Environment check:
-!`echo "bun: $(bun --version 2>/dev/null || echo 'NOT INSTALLED — will offer to install')" && echo "git: $(git rev-parse --is-inside-work-tree 2>/dev/null && echo 'repo exists' || echo 'no git repo')" && echo "package.json: $([ -f package.json ] && cat package.json | python3 -c 'import sys,json; d=json.load(sys.stdin); print(d.get(\"name\",\"?\"))' 2>/dev/null || echo none)"`
+Environment:
+!`echo "bun: $(bun --version 2>/dev/null || echo 'NOT INSTALLED')" && echo "git: $(git rev-parse --is-inside-work-tree 2>/dev/null && echo 'repo exists' || echo 'no repo')" && echo "existing package.json: $([ -f package.json ] && python3 -c 'import json; d=json.load(open(\"package.json\")); print(d.get(\"name\",\"?\"))' 2>/dev/null || echo none)"`
 
-Guide files: !`ls "${CLAUDE_SKILL_DIR}/../../guides/" 2>/dev/null`
-Example files: !`ls "${CLAUDE_SKILL_DIR}/examples/" 2>/dev/null`
-
----
-
-## Step 0 — Handle arguments + environment check
-
-**Arguments:** If `$ARGUMENTS` contains a name (e.g. `/new-cli my-tool`), use it to pre-fill question 1 and skip asking it. If `$ARGUMENTS` is a path to an existing project, run the `cli-explorer` agent on it first (Step 1), then return here.
-
-**Environment check:** Before asking anything else, check the runtime context above and handle any blockers:
-
-- **Bun not installed** → Tell the user and ask: "Bun is required. Should I install it? (runs `curl -fsSL https://bun.sh/install | bash`)" — wait for confirmation before running.
-- **No git repo** → After confirming the project name, ask: "No git repo found here. Should I run `git init` and create a `.gitignore`?"
-- **Existing package.json found** → Flag it: "There's already a `package.json` here for `[name]`. Are we extending this project or starting in a new subfolder?"
+References available:
+!`echo "guides: $(ls ${CLAUDE_SKILL_DIR}/../../guides/ 2>/dev/null | tr '\n' ' ')" && echo "examples: $(ls ${CLAUDE_SKILL_DIR}/examples/ 2>/dev/null | tr '\n' ' ')"`
 
 ---
 
-## Step 1 — Explore (only if extending an existing project)
+## Phase 1 — Plan
 
-If the user mentions an existing CLI or passes a path, launch the `cli-explorer` agent:
-- Pass the path
-- Ask for: entry points, existing patterns, key dependencies, what already works
-- Use findings to skip questions the existing code already answers
+### Step 1a — Handle arguments + environment
 
-If starting fresh, skip to Step 2.
+- If `$ARGUMENTS` is a project name: use it, skip to Step 1b
+- If `$ARGUMENTS` is a path to an existing project: run `cli-explorer` on it first, use findings to pre-answer the planning interview, then continue
+- If Bun is not installed: tell the user now — "Bun is required. Should I install it? (`curl -fsSL https://bun.sh/install | bash`)" — wait for yes before running
+- If a `package.json` already exists here: "There's already a project named `[name]` here. Are we extending this or starting in a new subfolder?"
+
+### Step 1b — Run the planning interview
+
+Launch the `cli-planner` agent. Pass it:
+- The user's stated goal or project name from `$ARGUMENTS`
+- Any findings from the explorer (if extending an existing project)
+- The current directory path
+
+The planner will conduct a goal-driven interview, make architecture recommendations, write `.cli/CONTEXT.md`, `.cli/DECISIONS.md`, and `.cli/PLAN.md`, and return a structured `PLAN_COMPLETE` summary.
+
+**Wait for the planner to return `PLAN_COMPLETE` before continuing.**
 
 ---
 
-## Step 2 — Planning interview (one message, all questions at once)
+## Phase 2 — Dependency setup
 
-Ask only the questions not already answered by `$ARGUMENTS` or Step 1 findings. Use plain language — assume the user is not an AI expert:
+After receiving `PLAN_COMPLETE`, show the user what will be installed based on the plan:
 
 ```
-Let's plan this out. Answer whatever applies:
+Here's what this project needs:
 
-1. Name — what's this CLI called? (lowercase, hyphens ok, e.g. "my-tool")
-2. Purpose — one sentence: what problem does it solve? What triggers someone to run it?
+  ✓ bun (runtime)                     [already installed / needs install]
+  ✓ @anthropic-ai/sdk                 [if AI: yes]
+  ✓ ink ^5 + react ^19                [if interface: wizard]
+  ✓ ink-text-input ^6                 [if interface: wizard]
+  ✓ @modelcontextprotocol/sdk         [if distribution: mcp]
 
-3. Interface style — pick one:
-   a) Dashboard — always-on screen you navigate with arrow keys (good for: monitoring, browsing output, running tasks)
-   b) Wizard — step-by-step questions one at a time (good for: setup flows, generation tasks, anything with choices)
-   c) Commands only — run specific commands like `bun run export` (good for: scripting, automation, no interactive UI)
-
-4. Does it use AI?
-   a) No — pure utility, no Claude calls
-   b) Yes, via API key — needs ANTHROPIC_API_KEY in .env
-   c) Yes, via Claude Code — no API key needed, runs inside this session (best for personal tools)
-   d) Both fast + slow — fast calls for quick tasks (cheap), smart calls for complex ones (tell me what each does)
-
-5. External data — where does it get information?
-   a) Local files only
-   b) Specific web APIs (list them: Reddit, Firecrawl, Perplexity, etc.)
-   c) Web scraping
-   d) None
-
-6. Output — where does it put results?
-   a) Terminal only
-   b) Files (markdown, HTML, JSON) to an output/ folder
-   c) A browser view that opens automatically
-   d) Multiple of the above
-
-7. Distribution — how will it be used?
-   a) Personal — I run it from the project folder
-   b) Team — others clone the repo and run it locally
-   c) Global — installed system-wide with `bun install -g`
-
-8. Claude Desktop integration — should Claude be able to query this tool's output in a chat?
-   (This adds an MCP server — useful if you generate reports, content, or structured data)
+Should I create the project folder and run `bun install`?
+I'll write package.json first — you can review before I install anything.
 ```
 
-Wait for all answers before proceeding.
+Wait for explicit confirmation ("yes" / "go ahead" / "do it") before running `bun install`.
+
+On confirmation:
+1. `mkdir -p <name>` — create project folder
+2. Write `package.json` first (user can review)
+3. `cd <name> && bun install`
+4. `git init && git add package.json bun.lockb && git commit -m "chore: init project"`
 
 ---
 
-## Step 2b — Dependency setup
+## Phase 3 — Scaffold
 
-After the user answers the questions from Step 2, check which packages will be needed and offer to set them up:
+Generate files in this order. Show the filename before writing each one. Write each completely — no `// TODO` stubs.
 
-```
-Based on your answers, here's what this project needs:
+**Always (every project):**
+1. `CLAUDE.md` — references `.cli/` for context, lists run command and architecture
+2. `.gitignore` — node_modules, .env, output/, .propane/, .cache/, .fonts/
+3. `.env.example` — one line per required key with a description comment
+4. `manifest.json` — capabilities: commands, ai tiers, sources, browser, mcp
+5. `src/models.ts` — only the tiers from the plan (see examples/models.ts)
+6. `src/configure.ts` — copy verbatim from examples/configure.ts
+7. `src/cli.ts` — command router, under 80 lines
 
-✓ bun (runtime)                         [already installed / needs install]
-✓ @anthropic-ai/sdk                     always required
-[if wizard] ✓ ink ^5  + react ^19       Ink terminal UI
-[if wizard] ✓ ink-text-input ^6         text fields in wizard
-[if wizard] ✓ @types/react + typescript dev deps
-[if mcp]    ✓ @modelcontextprotocol/sdk MCP server
+**If interface = hud:**
+- `src/hud.ts` — ANSI screen loop with ASCII art header
+  - Read `examples/hud.ts` and adapt it for this project's menu items
+  - Add `process.stdout.on('resize', redraw)` — see guide 08
+  - Width-safe: use `Math.min(process.stdout.columns ?? 80, 66)` not hardcoded numbers
 
-Should I create the project folder and run `bun install` now?
-(I'll write package.json first, then install — you can review before I run anything)
-```
-
-Wait for confirmation. Then:
-1. Create the project folder: `mkdir -p <name> && cd <name>`
-2. Write `package.json` (Step 4 item 4)
-3. Run `bun install` in the project folder
-4. Run `git init` if the user confirmed it in Step 0
-5. Continue generating remaining files
-
-**Do not run `bun install` without explicit user confirmation.**
-
----
-
-## Step 3 — Architecture decision
-
-For non-trivial CLIs (3+ commands or 2+ external APIs), launch two `cli-architect` agents in parallel:
-- Agent A argument: `minimal` — fewest files, fastest to ship
-- Agent B argument: `modular` — clean separation, easy to extend
-
-Present both approaches with a recommendation. Wait for the user to choose.
-
-For simple CLIs (1-2 commands, no external APIs), pick minimal and proceed.
-
----
-
-## Step 4 — Generate files in order
-
-Write each file completely before moving to the next. Show the filename before writing.
-
-**Required files (always):**
-1. `PLAN.md` — 3–5 bullets on what we're building and why
-2. `CLAUDE.md` — architecture notes (use template in Step 8)
-3. `.gitignore` — node_modules, .env, output/, .propane/, .cache/
-4. `package.json` — scripts: hud, run, test; deps based on answers
-5. `src/models.ts` — only the tiers this project uses (see Step 5)
-6. `src/configure.ts` — always identical (see Step 6)
-7. `src/cli.ts` — command router, under 80 lines (see Step 7)
-
-**If HUD style:**
-- `src/hud.ts` — ANSI screen loop with ASCII art header (see guides/02-ui-patterns.md)
-
-**If Wizard style:**
+**If interface = wizard:**
 - `cli/index.tsx` — `render(<App />)`
-- `cli/App.tsx` — step state machine with NEXT/PREV maps
-- `cli/components/Frame.tsx` — border, ✓/◉/○ progress dots, footer hints
-- `cli/components/SelectList.tsx` — arrow-key navigation with space/enter select
-- `cli/components/TextInput.tsx` — wraps ink-text-input, ← goes back
+- `cli/App.tsx` — step state machine with NEXT/PREV maps (see examples/App.tsx)
+- `cli/components/Frame.tsx` — copy from examples/Frame.tsx
+- `cli/components/SelectList.tsx` — copy from examples/SelectList.tsx
+- `cli/components/TextInput.tsx` — wraps ink-text-input with ← back support
+- `tsconfig.json` — jsx: react-jsx, jsxImportSource: react
 
-**If external APIs:**
-- `src/sources/types.ts` — SourceResult interface (see Step 9)
-- `src/sources/<api>.ts` — one stub per API, returns SourceResult (never throws)
+**If sources (external APIs):**
+- `src/sources/types.ts` — copy from examples/sources/types.ts
+- `src/sources/<api>.ts` — one stub per source from the plan
 
-**If browser view:**
-- `src/server.ts` — Bun.serve with /events SSE + /health
-- `ui/index.html` — self-contained HTML (see guides/02-ui-patterns.md template)
+**If output = browser:**
+- `src/server.ts` — Bun.serve with /events SSE, /health, /message POST
+- `ui/index.html` — copy the template from guides/ui-patterns.md, replace CLI_NAME
 
-**If MCP:**
-- `src/mcp.ts` — stdio MCP server (see guides/05-mcp-patterns.md)
+**If distribution = mcp:**
+- `src/mcp.ts` — copy from guides/mcp-patterns.md template
 
 **Always last:**
-- `tests/cli.test.ts` — bun:test suite (configure, models, at least one source)
+- `tests/cli.test.ts` — bun:test for configure (env loading), models (export shape), at least one source round-trip
 
----
-
-## Step 5 — models.ts pattern
-
-Only include the tiers this project uses. Name by purpose, not model name:
-
-```typescript
-// src/models.ts — single source of truth for all model IDs
-// Tiers: fast (cheap, quick tasks) | smart (capable, complex tasks)
-export const MODELS = {
-  fast:  { id: 'claude-haiku-4-5-20251001', maxTokens: 2048 },
-  smart: { id: 'claude-sonnet-4-6',         maxTokens: 8000 },
-} as const
-export type ModelKey = keyof typeof MODELS
-```
-
-Rules:
-- Never hardcode model strings anywhere else in the project
-- Use prompt caching (`cache_control: { type: 'ephemeral' }`) for stable system prompts
-- Add a third tier only if there's a distinct use case (e.g. `write` → Opus for final copy)
-
----
-
-## Step 6 — configure.ts (always identical)
-
-```typescript
-// src/configure.ts — reads .env file into process.env
-import { readFileSync, existsSync } from 'fs'
-import { join } from 'path'
-
-export function loadEnv(): void {
-  const path = join(import.meta.dir, '..', '.env')
-  if (!existsSync(path)) return
-  for (const line of readFileSync(path, 'utf8').split('\n')) {
-    const eq = line.indexOf('=')
-    if (eq < 1) continue
-    const key = line.slice(0, eq).trim()
-    const val = line.slice(eq + 1).trim()
-    if (key && !process.env[key]) process.env[key] = val
-  }
-}
-
-export function maskValue(v: string): string {
-  if (!v) return '(not set)'
-  return v.slice(0, 4) + '•'.repeat(Math.min(v.length - 8, 20)) + v.slice(-4)
-}
-```
-
-Copy this verbatim. Do not modify it.
-
----
-
-## Step 7 — cli.ts (command router)
-
-Keep under 80 lines. All logic lives in imported modules:
-
-```typescript
-// src/cli.ts — command router
-import { loadEnv } from './configure.ts'
-loadEnv()
-
-const args = process.argv.slice(2)
-switch (args[0]) {
-  case undefined:
-  case 'hud':  await import('./hud.ts').then(m => m.runHud()); break
-  case 'run':  await import('./run.ts').then(m => m.cmdRun(args.slice(1))); break
-  default:
-    process.stderr.write(`Unknown command: ${args[0]}\nUsage: bun hud\n`)
-    process.exit(1)
-}
-```
-
-For wizard-style CLIs, replace the hud import with:
-```typescript
-case 'hud': {
-  const { render } = await import('ink')
-  const { default: React } = await import('react')
-  const { App } = await import('../cli/App.tsx')
-  render(React.createElement(App))
-  break
-}
+Commit after scaffold:
+```bash
+git add -A && git commit -m "feat: scaffold [name] — [interface] interface, [AI tier] AI, [sources]"
 ```
 
 ---
 
-## Step 8 — CLAUDE.md template
+## Phase 4 — Quality review
 
-```markdown
-# CLAUDE.md
+Launch two `cli-reviewer` agents in parallel:
+- `cli-reviewer correctness` — broken imports, bad paths, missing types, env vars used before load
+- `cli-reviewer conventions` — models.ts, SourceResult, no DB patterns, .propane/ gitignored
 
-## What this is
-[ONE_LINE_PURPOSE]
-
-## Run it
-\`\`\`
-bun hud          # main interface
-bun test         # run tests
-bun run mcp      # MCP server (if applicable)
-\`\`\`
-
-## Architecture
-- Entry: `src/cli.ts` → switch router
-- [HUD: `src/hud.ts` — ANSI screen loop | Wizard: `cli/App.tsx` — Ink step machine]
-- `src/models.ts` — all model IDs (never hardcode strings elsewhere)
-- `src/configure.ts` — loads .env, masks keys for display
-- `src/sources/` — one file per external data source, all return SourceResult (never throws)
-- [Optional: `src/server.ts` + `ui/` — browser view via Bun.serve + SSE]
-- [Optional: `src/mcp.ts` — MCP stdio server for Claude Desktop]
-- `.propane/` — runtime state, gitignored
-- `output/` — generated files, gitignored
-
-## No database
-Flat files only. Claude is the query layer. See cli-skill/guides/04-data-philosophy.md.
+Apply every fix. Commit fixes:
+```bash
+git add -A && git commit -m "fix: apply reviewer corrections"
 ```
 
 ---
 
-## Step 9 — SourceResult pattern
+## Phase 5 — Verify
 
-Every external data fetch must return this type — never throw:
-
-```typescript
-// src/sources/types.ts
-export interface SourceResult {
-  source:   string        // machine ID, e.g. 'reddit'
-  label:    string        // human label, e.g. 'Reddit r/saas'
-  content:  string        // fetched text
-  links?:   string[]      // URLs found
-  error?:   string        // set if fetch failed — don't throw
-  skipped?: boolean       // set if source was toggled off
-}
-
-export function sourceError(source: string, label: string, err: unknown): SourceResult {
-  return { source, label, content: '', error: String(err) }
-}
-
-export function sourceSkip(source: string, label: string): SourceResult {
-  return { source, label, content: '', skipped: true }
-}
+```bash
+cd <project-path> && bun hud
 ```
 
-Stub pattern for each source file:
-```typescript
-// src/sources/reddit.ts
-import type { SourceResult } from './types.ts'
+If it crashes, read the error and fix it. Do not present a broken project as done.
 
-export async function fetchReddit(query: string): Promise<SourceResult> {
-  try {
-    const res = await fetch(`https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&limit=10`)
-    if (!res.ok) return sourceError('reddit', 'Reddit', `HTTP ${res.status}`)
-    const data = await res.json() as any
-    const posts = data.data.children.map((c: any) => `${c.data.title}\n${c.data.selftext}`).join('\n\n')
-    return { source: 'reddit', label: 'Reddit', content: posts }
-  } catch (err) {
-    return sourceError('reddit', 'Reddit', err)
-  }
-}
+Run tests:
+```bash
+bun test
 ```
 
 ---
 
-## Step 10 — HUD pattern (ANSI style)
+## Phase 6 — Ship checklist
 
-Key elements of `src/hud.ts`:
+Present this to the user. Do not claim done until all pass:
 
-```typescript
-// ANSI helpers
-const A = {
-  clear: '\x1b[2J\x1b[H', hideCursor: '\x1b[?25l', showCursor: '\x1b[?25h',
-  reset: '\x1b[0m', bold: '\x1b[1m', dim: '\x1b[2m',
-  gold: '\x1b[33m', green: '\x1b[32m', red: '\x1b[31m',
-  gray: '\x1b[90m', white: '\x1b[97m', cyan: '\x1b[36m',
-} as const
-const w = (s: string) => process.stdout.write(s)
-
-// ASCII art header — 6 lines of block letters using Unicode box-drawing
-const ASCII_ART = [
-  '  ██████╗ ██████╗  ██████╗      ██╗███████╗ ██████╗████████╗',
-  '  ██╔══██╗██╔══██╗██╔═══██╗     ██║██╔════╝██╔════╝╚══██╔══╝',
-  // ... generate for actual project name
-]
-
-// Spinner for async work
-const FRAMES = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏']
-
-// Key reading (raw mode)
-async function readKey(): Promise<string> {
-  process.stdin.setRawMode(true)
-  return new Promise(resolve => {
-    process.stdin.once('data', buf => {
-      process.stdin.setRawMode(false)
-      resolve(buf.toString())
-    })
-  })
-}
-
-export async function runHud(): Promise<void> {
-  // screen loop: render → readKey → update state → render
-}
-```
-
----
-
-## Step 11 — Ink Wizard pattern
-
-Key elements for wizard-style CLIs (from `animations/cli/`):
-
-**Frame.tsx** — wraps every step:
-- `borderStyle="single" borderColor="green"` at 66 chars wide
-- Progress dots: `✓` (done), `◉` (current), `○` (future)
-- Footer with keyboard hints: `↑ ↓ navigate   space select   ← back   ctrl+c exit`
-
-**App.tsx** — step state machine:
-```typescript
-const NEXT: Record<Step, Step> = { step1: 'step2', step2: 'step3', ... }
-const PREV: Record<Step, Step> = { step1: 'step1', step2: 'step1', ... }
-
-export const App: React.FC = () => {
-  const [step, setStep] = useState<Step>('step1')
-  const [answers, setAnswers] = useState<Partial<Answers>>({})
-  // switch (step) { case 'step1': return <StepOne onNext={...} onBack={...} /> }
-}
-```
-
-**SelectList** — single-select:
-- `useInput` from ink for ↑/↓ navigation and enter/space to select
-- Show `▶` prefix on selected item
-
-**package.json** for wizard-style:
-```json
-{
-  "dependencies": {
-    "ink": "^5.0.0",
-    "ink-text-input": "^6.0.0",
-    "react": "^19.0.0",
-    "@anthropic-ai/sdk": "^0.40.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "typescript": "^5.0.0"
-  }
-}
-```
-
-**tsconfig.json** for wizard-style (required for JSX):
-```json
-{
-  "compilerOptions": {
-    "target": "ESNext", "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx", "jsxImportSource": "react",
-    "strict": true
-  }
-}
-```
-
----
-
-## Step 12 — Quality review
-
-After all files are generated, launch two `cli-reviewer` agents in parallel:
-- `cli-reviewer correctness` — missing imports, wrong paths, broken types, bad async
-- `cli-reviewer completeness` — does it match all answers from Step 2?
-
-Apply all fixes before presenting to the user.
-
----
-
-## Step 13 — Ship checklist
-
-Do not claim "done" until all items are checked:
-
-- [ ] `bun hud` runs without errors
-- [ ] ASCII art (HUD) or Frame title (Wizard) renders correctly
-- [ ] At least one menu item or wizard step does something real
-- [ ] `.env.example` lists all required keys with descriptions
-- [ ] `src/models.ts` has no hardcoded model strings elsewhere in the project
-- [ ] All sources return `SourceResult` — none throw
-- [ ] At least 3 tests pass with `bun test`
+- [ ] `bun hud` starts without errors
+- [ ] Main menu renders with correct items
+- [ ] Arrow keys navigate, `ctrl+c` exits cleanly (cursor restored)
+- [ ] ASCII art renders (HUD) or Frame title shows (Wizard)
+- [ ] At least one menu item / wizard step does real work
+- [ ] All tests pass with `bun test`
+- [ ] `.env.example` lists every required key with a comment
 - [ ] `output/` and `.propane/` are in `.gitignore`
-- [ ] `CLAUDE.md` accurately describes the architecture
-- [ ] If browser view: `bun serve` opens UI and connection status shows
-- [ ] If MCP: `src/mcp.ts` runs and `manifest.json` has registration instructions
+- [ ] `.cli/` folder exists with CONTEXT.md, DECISIONS.md, PLAN.md
+- [ ] If browser: `bun serve` opens and shows "connected"
+- [ ] If MCP: `src/mcp.ts` runs and CLAUDE.md has registration instructions
+- [ ] If ANSI HUD: resize terminal — layout should adapt, not break
+
+Final commit:
+```bash
+git add -A && git commit -m "chore: ready for first run"
+```
+
+Do not push to remote. Tell the user: "Run `git push` when you're ready to share this."
 
 ---
 
 ## Reference
 
-**Guides** (conceptual patterns + templates):
-- Folder layout: `${CLAUDE_SKILL_DIR}/../../guides/01-folder-structure.md`
-- UI patterns & HTML template: `${CLAUDE_SKILL_DIR}/../../guides/02-ui-patterns.md`
-- File-browser bridge: `${CLAUDE_SKILL_DIR}/../../guides/03-file-browser-bridge.md`
-- Data philosophy: `${CLAUDE_SKILL_DIR}/../../guides/04-data-philosophy.md`
-- MCP patterns: `${CLAUDE_SKILL_DIR}/../../guides/05-mcp-patterns.md`
-- Claude Code patterns: `${CLAUDE_SKILL_DIR}/../../guides/07-claude-code-patterns.md`
-
-**Examples** (copy-paste starting points — adapt, don't copy blindly):
-- `${CLAUDE_SKILL_DIR}/examples/models.ts` — ModelKey + tier setup
-- `${CLAUDE_SKILL_DIR}/examples/configure.ts` — loadEnv + maskValue (copy verbatim)
-- `${CLAUDE_SKILL_DIR}/examples/hud.ts` — complete ANSI HUD with spinner + screen loop
-- `${CLAUDE_SKILL_DIR}/examples/App.tsx` — Ink wizard state machine skeleton
-- `${CLAUDE_SKILL_DIR}/examples/Frame.tsx` — progress dots + border component
-- `${CLAUDE_SKILL_DIR}/examples/SelectList.tsx` — single + multi-select with arrow keys
-- `${CLAUDE_SKILL_DIR}/examples/sources/types.ts` — SourceResult interface + helpers
-- `${CLAUDE_SKILL_DIR}/examples/package.json` — annotated deps (remove what you don't use)
+- UX patterns (resize, navigation, feedback, error messages): `${CLAUDE_SKILL_DIR}/../../guides/cli-ux.md`
+- Folder structure: `${CLAUDE_SKILL_DIR}/../../guides/folder-structure.md`
+- UI templates: `${CLAUDE_SKILL_DIR}/../../guides/ui-patterns.md`
+- Data philosophy: `${CLAUDE_SKILL_DIR}/../../guides/data-philosophy.md`
+- MCP patterns: `${CLAUDE_SKILL_DIR}/../../guides/mcp-patterns.md`
+- Example files: `${CLAUDE_SKILL_DIR}/examples/`

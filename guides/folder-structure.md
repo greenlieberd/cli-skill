@@ -9,8 +9,13 @@ Every Propane CLI follows this layout. Deviation requires a reason written in CL
   package.json         bun + scripts (hud, run, test, mcp)
   .env                 API keys — gitignored, never committed
   .gitignore           see "What to ignore" below
-  CLAUDE.md            agent instructions for this project
-  PLAN.md              3+ bullet build plan
+  CLAUDE.md            agent instructions for this project (references .cli/)
+
+  .cli/                planning and architecture context — committed, Claude Code reads this
+    CONTEXT.md         loaded by Claude Code: purpose, architecture, conventions, do-nots
+    DECISIONS.md       why each architecture choice was made (interface, AI tier, sources)
+    PLAN.md            living build plan with checkboxes — /fix-cli reads and updates this
+
   manifest.json        machine-readable capability declaration (see Guide 05)
 
   src/

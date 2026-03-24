@@ -110,11 +110,18 @@ If any check fails, fix it before marking the task done.
 
 ---
 
-## Step 4 — Check off the task
+## Step 4 — Check off the task and commit
 
-Edit `PLAN.md` in the project:
+Edit `.cli/PLAN.md` in the project:
 - Change `- [ ] **[task]**` to `- [x] **[task]**`
 - Update the status line: `Status: [X+1] of [N] tasks complete`
+
+Commit the work:
+```bash
+cd [project-path] && git add -A && git commit -m "fix: [task name]"
+```
+
+Do not push. The user decides when to push to remote.
 
 Then show the user:
 

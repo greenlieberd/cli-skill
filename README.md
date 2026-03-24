@@ -137,44 +137,42 @@ A pre-tool-use hook warns when generated code violates these conventions.
 ## Project structure
 
 ```
-.claude-plugin/
-  plugin.json             — plugin manifest
+.claude-plugin/plugin.json
 
 skills/
-  new-cli/
-    SKILL.md              — /new-cli skill
-    examples/             — copy-paste reference files
-      hud.ts              — complete ANSI HUD with spinner + screen loop
-      App.tsx             — Ink wizard state machine
-      Frame.tsx           — progress dots + border component
-      SelectList.tsx      — single + multi-select
-      sources/types.ts    — SourceResult interface
-      models.ts           — model tier setup
-      configure.ts        — loadEnv + maskValue (copy verbatim)
-      package.json        — annotated deps
-  audit-cli/
-    SKILL.md              — /audit-cli skill
-  fix-cli/
-    SKILL.md              — /fix-cli skill
+  new-cli/SKILL.md          — /new-cli: plan + scaffold
+    examples/               — copy-paste reference files
+      hud.ts                  complete ANSI HUD with spinner, resize handling
+      App.tsx                 Ink wizard state machine
+      Frame.tsx               progress dots + border
+      SelectList.tsx          single + multi-select
+      sources/types.ts        SourceResult interface + helpers
+      models.ts               model tier setup
+      configure.ts            loadEnv + maskValue (copy verbatim)
+      package.json            annotated deps
+  audit-cli/SKILL.md        — /audit-cli: review → .cli/PLAN.md
+  fix-cli/SKILL.md          — /fix-cli: execute plan items with commits
 
 agents/
-  cli-explorer.md         — analyzes existing CLIs (read-only tools)
-  cli-architect.md        — designs architecture (minimal vs modular)
-  cli-reviewer.md         — reviews code (correctness / completeness / conventions)
-
-hooks/
-  hooks.json              — convention check + session context
-  check_conventions.py    — warns on hardcoded model IDs, throwing sources, DB imports
-  load_context.sh         — scoped session reminder (CLI projects only)
+  cli-planner.md            — goal-driven planning interview → .cli/ folder
+  cli-explorer.md           — read-only analysis of existing CLIs
+  cli-architect.md          — architecture blueprint (minimal vs modular)
+  cli-reviewer.md           — code review (correctness / completeness / conventions)
 
 guides/
-  01-folder-structure.md  — canonical layout, naming, file size rules
-  02-ui-patterns.md       — HUD vs Wizard, HTML template, dark palette
-  03-file-browser-bridge.md — Bun fs.watch → SSE → browser
-  04-data-philosophy.md   — no databases, flat files, Claude as query layer
-  05-mcp-patterns.md      — MCP server template, path safety, Claude Desktop setup
-  06-plugin-ecosystem.md  — external plugins worth composing
-  07-claude-code-patterns.md — streaming, multi-agent, hooks, status bar
+  folder-structure.md       — canonical layout including .cli/ folder
+  ui-patterns.md            — HTML template, dark palette, SSE bridge
+  file-browser-bridge.md    — Bun fs.watch → SSE → browser → POST
+  data-philosophy.md        — no databases, flat files, Claude as query layer
+  mcp-patterns.md           — MCP server template, Claude Desktop setup
+  plugin-ecosystem.md       — external plugins worth composing
+  claude-code-patterns.md   — streaming, multi-agent, hooks, status bar
+  cli-ux.md                 — navigation, resize handling, feedback, error messages
+
+hooks/
+  hooks.json                — convention check (scoped to CLI projects)
+  check_conventions.py      — warns on model IDs, throwing sources, DB imports
+  load_context.sh           — scoped session reminder
 ```
 
 ---
