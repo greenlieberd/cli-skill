@@ -19,17 +19,11 @@ Skills compose: `cli:new` runs the planner internally. `cli:audit` runs the expl
 ## Install
 
 ```bash
-git clone git@github.com:greenlieberd/cli-skill.git
-```
-
-Then register it as a local marketplace and install:
-
-```bash
-claude plugin marketplace add ./cli-skill
+claude plugin marketplace add https://github.com/greenlieberd/cli-skill
 claude plugin install cli@cli
 ```
 
-After installing, restart Claude Code. Then:
+Restart Claude Code, then:
 ```
 /cli:new
 ```
@@ -39,7 +33,6 @@ You should see the planning interview start.
 ### Update
 
 ```bash
-cd cli-skill && git pull
 claude plugin update cli
 ```
 
