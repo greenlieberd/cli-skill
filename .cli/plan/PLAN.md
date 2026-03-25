@@ -54,7 +54,7 @@
 Build in this order:
 
 - [x] **Plugin update checker** `feat` — non-blocking SessionStart notice: version diff + exact update command; cached 24h; silent on network failure; 16 unit tests
-- [ ] **Audit redesign** `refactor` — `/cli:audit` becomes strategic+retrospective: loads everything (logs, learnings, plan, code), spawns architect+reviewer mindset, proposes multiple directions with trade-offs, user picks one, produces PLAN.md; SessionStart suggests audit after N sessions or returning to old project
+- [x] **Audit redesign** `refactor` — `/cli:audit` becomes strategic+retrospective: loads everything (logs, learnings, plan, code), spawns architect+reviewer mindset, proposes multiple directions with trade-offs, user picks one, produces PLAN.md; SessionStart suggests audit after 5+ sessions
 - [ ] **Auto-learning compression** `feat` — no reflect skill; runs automatically after N sessions; compresses global `~/.cli/learnings/SUMMARY.md` (frequency-promotes-silence-fades, stays tight); injects passively into SessionStart; invisible to user
 - [ ] **Integration tests** `test` — contract/schema validation via `claude` subprocess (no API key); checks: PLAN.md structure, folder layout, CONTEXT.md required fields, rule references match plan decisions, agent output contracts; lives in `tests/integration/`
 - [ ] **Repo dev environment** `chore` — `.claude/settings.json` with auto-hooks: plugin-validator on plugin.json/SKILL.md save, test suite on hook script save; one contributor rule file; solo-contributor scale, nothing more

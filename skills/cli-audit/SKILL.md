@@ -1,6 +1,6 @@
 ---
 name: cli-audit
-description: This skill handles improvement, fixing, extending, and feature management on an existing CLI project. Triggers on "audit this CLI", "improve my CLI", "add a feature to X", "fix the issues", "manage the feature set", "what's in v0.1 vs v0.2", "work through the plan", or any request to evolve a tool that already exists. Reads all existing context before making any changes.
+description: This skill should be used when the user wants a strategic review of an existing CLI — what's working, what's broken, what to build next. Triggers on "audit this CLI", "what should I work on next", "review my project", "what's the state of X", "health check", or any request to understand and improve a CLI that already exists. Loads all context first, proposes multiple directions with trade-offs, then executes the chosen one task by task with commits.
 argument-hint: "[path/to/cli-project]"
 model: sonnet
 effort: high
@@ -8,18 +8,22 @@ context: fork
 allowed-tools: Read, Write, Edit, Glob, Grep, LS, Bash
 ---
 
-# cli:audit — Understand the system, then improve it
+# cli:audit — Read everything. Propose directions. Execute.
 
-Full improvement cycle. Loads all existing context first, maps the current feature set, then explores, plans, and executes task by task with commits. Never makes changes without understanding what's already there.
+Strategic review first, execution second. Never asks "what do you want to do?" — reads everything that exists, assesses the full picture, then presents options with trade-offs. The user picks a direction. Then it executes, task by task, with commits.
 
 ## Context loaded at runtime
 
 Directory: !`pwd`
 Target: `$ARGUMENTS`
 CONTEXT.md: !`cat "${ARGUMENTS:-.}/.cli/plan/CONTEXT.md" 2>/dev/null | head -80 || echo "none"`
-PLAN.md status: !`grep "^> Status:" "${ARGUMENTS:-.}/.cli/plan/PLAN.md" 2>/dev/null || echo "none"`
-Existing explore: !`[ -f "${ARGUMENTS:-.}/.cli/audit/EXPLORE.md" ] && echo "found" || echo "none"`
-Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null || echo "none"`
+PLAN.md: !`cat "${ARGUMENTS:-.}/.cli/plan/PLAN.md" 2>/dev/null || echo "none"`
+DECISIONS.md: !`cat "${ARGUMENTS:-.}/.cli/plan/DECISIONS.md" 2>/dev/null | head -60 || echo "none"`
+Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null | head -30 || echo "none"`
+Sessions logged: !`ls "${ARGUMENTS:-.}/.cli/sessions/"*.jsonl 2>/dev/null | grep -v errors_buffer | wc -l | tr -d ' '`
+Last session: !`ls -t "${ARGUMENTS:-.}/.cli/sessions/"*.jsonl 2>/dev/null | grep -v errors_buffer | head -1 | xargs basename 2>/dev/null | sed 's/.jsonl//' || echo "none"`
+Recent errors: !`cat "${ARGUMENTS:-.}/.cli/sessions/.errors_buffer.jsonl" 2>/dev/null | tail -5 || echo "none"`
+EXPLORE.md: !`[ -f "${ARGUMENTS:-.}/.cli/audit/EXPLORE.md" ] && (find "${ARGUMENTS:-.}/.cli/audit/EXPLORE.md" -mtime +7 2>/dev/null && echo "stale" || echo "fresh") || echo "missing"`
 
 ---
 
@@ -33,93 +37,9 @@ Which CLI should I audit?
 
 ---
 
-## Step 1 — Quick snapshot
+## Step 1 — Explore if needed
 
-Using what's already loaded above, show a fast system snapshot — no additional file reads yet:
-
-```
-[project-name]  [plan-status from PLAN.md status]
-
-  Interface: [from CONTEXT.md or "unknown"]
-  Memory: [key watch-out from SUMMARY.md, or "none yet"]
-```
-
-If CONTEXT.md is missing: "No plan found. I'll explore the project in Step 3."
-
----
-
-## Step 2 — Ask what we're working on
-
-One question. Options cover the full range of audit work including feature management:
-
-```
-What are we working on today?
-
-  A) Fix issues — crashes, broken patterns, convention violations
-  B) Improve UX — navigation, output clarity, resize, feedback
-  C) Add a feature — pick something from the v0.2+ list, or describe a new one
-  D) Manage the feature set — review what's in v0.1, adjust scope, re-prioritize
-  E) Prep for release — tests, docs, .env.example, CLAUDE.md
-  F) Full audit — explore everything and decide from findings
-
-Or describe what's on your mind.
-```
-
-**If D (feature set management):**
-Show the current feature table from Step 1 and ask:
-```
-Here's the current feature set:
-
-  v0.1 (build now):
-    [list from PLAN.md]
-
-  v0.2+ (parked):
-    [list from PLAN.md]
-
-What would you like to change?
-  — Move something from v0.2+ to v0.1
-  — Move something from v0.1 to v0.2+ (scope reduction)
-  — Add a new feature to either list
-  — Remove something entirely
-
-After this we update the plan and decide what to build next.
-```
-
-Update PLAN.md to reflect changes before continuing.
-
----
-
-## Step 2b — Load context for the goal
-
-Read only what the chosen goal needs. Do not load files speculatively.
-
-**A (fix) or B (improve UX) or E (release prep):**
-Read `.cli/plan/PLAN.md` in full — need the task list. Skip DECISIONS.md.
-
-**C (add feature):**
-Read `.cli/plan/PLAN.md` + `.cli/plan/DECISIONS.md` — need prior decisions to avoid contradicting them.
-
-**D (feature set management):**
-Read `.cli/plan/PLAN.md` in full — need both v0.1 and v0.2+ lists to display the feature table.
-
-**F (full audit):**
-Read `.cli/plan/PLAN.md` + `.cli/plan/DECISIONS.md` + `.cli/learnings/decisions.md` if present + `.cli/audit/EXPLORE.md` if fresh (< 7 days old).
-
-Show the feature table now if goal is D or F:
-```
-  ┌──────────────────────────────┬─────────┬──────────────────────────┐
-  │ Feature                      │ Version │ Status                   │
-  ├──────────────────────────────┼─────────┼──────────────────────────┤
-  │ [feature]                    │ v0.1    │ ✓ done / ☐ pending       │
-  │ [feature]                    │ v0.2+   │ parked                   │
-  └──────────────────────────────┴─────────┴──────────────────────────┘
-```
-
----
-
-## Step 3 — Explore (skip if EXPLORE.md is fresh and goal is known)
-
-If `.cli/audit/EXPLORE.md` doesn't exist, or the goal requires fresh findings, run `cli-explorer`:
+If EXPLORE.md is `missing` or `stale`: spawn `cli-explorer` agent (via Task tool) to map the codebase.
 
 > Analyze the CLI at [path]. Report:
 > 1. How to run it — entry points, bun scripts
@@ -127,53 +47,107 @@ If `.cli/audit/EXPLORE.md` doesn't exist, or the goal requires fresh findings, r
 > 3. AI usage — model IDs location, tiers, what Claude does
 > 4. APIs and sources — what's fetched, SourceResult or throw?
 > 5. Output — what gets written, where, in what format
-> 6. Storage — .propane/ and output/ contents
-> 7. Tests — what's covered, what's missing, mock patterns
-> 8. Feature completeness — which v0.1 plan items are actually done vs scaffolded
-> 9. Convention gaps — hardcoded models, throwing sources, no resize, no CLAUDE.md
-> 10. The 5 files to read first before touching anything
+> 6. Tests — what's covered, what's missing
+> 7. Feature completeness — v0.1 plan items: done vs. scaffolded vs. missing
+> 8. Convention gaps — hardcoded models, throwing sources, no resize, no CLAUDE.md
+> 9. The 5 files to read first before touching anything
 
-Write findings to `.cli/audit/EXPLORE.md`.
+Write findings to `.cli/audit/EXPLORE.md`. Wait for completion before continuing.
 
-Show a summary table:
-```
-Explored [project-name]:
-
-  ┌──────────────────┬───────────────────────────────────────────────┐
-  │ Interface        │ [type] — [key file]                           │
-  │ AI               │ [usage summary]                               │
-  │ Sources          │ [N] total — [X] ok, [Y] throwing              │
-  │ Tests            │ [coverage summary]                            │
-  │ Convention gaps  │ [N] found                                     │
-  └──────────────────┴───────────────────────────────────────────────┘
-
-  Issues:
-    ✗ [most important]
-    ✗ [second]
-    ✗ [third if any]
-
-Full findings → .cli/audit/EXPLORE.md
-```
+If EXPLORE.md is `fresh`: read it now — `cat .cli/audit/EXPLORE.md | head -100`.
 
 ---
 
-## Step 4 — Plan improvements
+## Step 2 — Full analysis
 
-Spawn the `cli-planner` agent (via Task tool) in **improve mode** with:
-- The EXPLORE.md findings
-- The system context already loaded (CONTEXT.md, PLAN.md)
-- The user's stated goal from Step 2
+With all context loaded, assess the full picture. Think like an architect and reviewer simultaneously.
 
-The planner:
-- Does not re-open decisions already in DECISIONS.md
-- Does not suggest features already deferred to v0.2+
-- Writes tasks that fit the existing architecture
-- Produces: `.cli/plan/PLAN.md` updated with new tasks in the correct section
+**What's working:**
+- Convention-clean areas (models in models.ts, sources returning SourceResult, tests passing)
+- Stable features with no recent errors
+- Plan tasks completed on schedule
 
-Show the plan before executing:
+**What's broken or drifting:**
+- Convention violations (hardcoded model IDs, throwing sources, missing resize handler)
+- Failing or missing tests
+- Recurring errors from the error buffer
+- Tasks marked pending for 3+ sessions without progress
+
+**What's stalled:**
+- v0.2+ features that have been parked for many sessions — are they still real?
+- Plan tasks that were started but never committed
+
+**What the history says:**
+- Session count and frequency pattern
+- Key watch-outs from SUMMARY.md
+- Last session date — is this a return after a long break?
+
+---
+
+## Step 3 — Health snapshot + directions
+
+Present the health snapshot first, then three directions. Never skip the snapshot.
 
 ```
-Improvement plan — [N] tasks:
+[project-name] — audit
+
+  ┌──────────────────────────────────────────────────────────┐
+  │ Plan       [X of N] tasks complete · [P] pending         │
+  │ Sessions   [N] logged · last: [date or "today"]          │
+  │ Issues     [N] convention violations · [N] stalled       │
+  │ Tests      [passing / failing / missing]                  │
+  └──────────────────────────────────────────────────────────┘
+
+What I found:
+  ✗ [most critical issue]
+  ✗ [second issue]
+  — [stalled item or pattern worth noting]
+
+Three directions:
+
+  A) [Direction name]
+     [What this does in 1-2 sentences]
+     Trade-off: [what you get vs. what you give up]
+     Estimate: [N sessions]
+
+  B) [Direction name]
+     [What this does in 1-2 sentences]
+     Trade-off: [what you get vs. what you give up]
+     Estimate: [N sessions]
+
+  C) [Direction name]
+     [What this does in 1-2 sentences]
+     Trade-off: [what you get vs. what you give up]
+     Estimate: [N sessions]
+
+Which direction? Or describe what's on your mind.
+```
+
+**Direction archetypes to draw from — pick the 3 most relevant:**
+
+- **Stabilize** — fix violations and failing tests. Conservative, high confidence.
+- **Ship a feature** — promote something from v0.2+ and build it now.
+- **Refactor then extend** — clean the foundation before adding anything.
+- **Scope down** — move something from v0.1 to v0.2+. Smaller but shippable sooner.
+- **Prep for release** — tests, docs, .env.example, CLAUDE.md, ship checklist.
+- **Start fresh plan** — current plan is stale; re-plan before executing anything.
+
+Always include trade-offs. Never present one direction as obviously correct.
+
+---
+
+## Step 4 — Build the task list
+
+Based on the chosen direction, produce a concrete task list. Spawn `cli-planner` agent (via Task tool) in **improve mode** with:
+- The chosen direction and its constraints
+- EXPLORE.md findings
+- CONTEXT.md, PLAN.md, DECISIONS.md already loaded
+- Instruction: do not re-open decisions in DECISIONS.md, do not contradict existing architecture
+
+The planner produces an updated `.cli/plan/PLAN.md`. Show the tasks before executing:
+
+```
+[Direction name] — [N] tasks:
 
   ┌────┬─────────────────────────────────┬──────────┬──────────────────────────┐
   │ #  │ Task                            │ Type     │ Why                      │
@@ -183,8 +157,8 @@ Improvement plan — [N] tasks:
   │ 3  │ [task name]                     │ test     │ [one-line reason]        │
   └────┴─────────────────────────────────┴──────────┴──────────────────────────┘
 
-  Parked for later (not in this run):
-    — [feature or fix deferred]
+  Parked (not in this run):
+    — [item deferred]
 
 Proceed with all? Or tell me where to start.
 ```
@@ -261,9 +235,9 @@ When all tasks are done:
 ✓ [N] tasks complete — [project-name]
 
   ┌──────────────────────┬───────────────────────────────────────────┐
-  │ What changed         │ [grouped by type: fixes / features / tests]│
+  │ What changed         │ [grouped: fixes / features / tests]       │
   │ Convention status    │ ✓ models.ts / ✓ SourceResult / ✓ resize   │
-  │ Test status          │ bun test: [pass / fail summary]            │
+  │ Test status          │ bun test: [pass / fail summary]           │
   │ v0.1 progress        │ [X of N tasks complete]                   │
   │ v0.2+ parked         │ [N features waiting]                      │
   └──────────────────────┴───────────────────────────────────────────┘
