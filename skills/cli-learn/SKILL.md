@@ -1,27 +1,29 @@
 ---
 name: learn
-description: Use this skill to extract learnings from past cli:* sessions and improve the cli-skill plugin itself. Triggers on "learn from sessions", "what have we learned", "improve the skills", "compress session logs", "what keeps going wrong", or after a few sessions on a project when you want to spot patterns. Reads .cli/sessions/, extracts patterns and gaps, proposes rule updates and scaffold changes.
+description: Use this skill to distill session history into project memory. Triggers on "learn from sessions", "what have we learned", "compress session logs", "summarize what's happened", "what keeps going wrong", or after a few sessions when you want future work on this project to be smarter. Reads .cli/sessions/, builds .cli/learnings/ — watch-out, patterns, decisions, errors. Never touches the cli-skill framework.
 argument-hint: "[path/to/cli-project]"
 model: sonnet
 effort: medium
 context: fork
-allowed-tools: Read, Write, Edit, Glob, Grep, LS, Bash
+allowed-tools: Read, Write, Glob, Grep, LS, Bash
 ---
 
-# cli:learn — Extract, compress, propose
+# cli:learn — Turn session history into project memory
 
-Reads session history from `.cli/sessions/`, finds patterns and gaps, proposes concrete improvements to rules, agents, and scaffold. Nothing is applied without your approval.
+Reads what's happened in past sessions, extracts what's worth remembering, and writes it into `.cli/learnings/`. Future sessions load this at start — less re-discovering, less repeating mistakes, more context on how this project actually works.
+
+The framework stays unchanged. This is memory for the project, not feedback for the plugin.
 
 ## Context loaded at runtime
 
 Directory: !`pwd`
 Target: `$ARGUMENTS`
 Sessions found: !`ls "${ARGUMENTS:-.}/.cli/sessions/"*.jsonl 2>/dev/null | grep -v errors_buffer | wc -l | tr -d ' '`
-Last learned: !`[ -f "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" ] && head -3 "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" || echo "never"`
+Last learned: !`[ -f "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" ] && grep "^updated:" "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" | head -1 || echo "never"`
 
 ---
 
-## Step 0 — Confirm and orient
+## Step 0 — Confirm
 
 If `$ARGUMENTS` is a path, use it. Otherwise use current directory.
 
@@ -30,23 +32,21 @@ Check sessions exist:
 ls .cli/sessions/*.jsonl 2>/dev/null | grep -v errors_buffer
 ```
 
-If no sessions found:
+If none found:
 ```
-No session logs found at .cli/sessions/.
+No session logs at .cli/sessions/ yet.
 
-Sessions are logged automatically when cli:* skills run.
-Run /cli:new, /cli:audit, or /cli:explore first, then come back.
+Sessions log automatically when any cli:* skill runs.
+Come back after a few sessions — the more history, the more useful this gets.
 ```
 
-If sessions exist, show what we're working with:
+If sessions exist:
 ```
-Found [N] session log files covering [date range].
+[N] sessions found — [date range]
 Last learning run: [date or "never"]
 
-I'll analyze these for patterns, errors, and gaps — then propose
-improvements to the cli-skill rules and scaffold.
-
-This may take a minute.
+Building project memory from session history.
+This stays in .cli/learnings/ — the framework is not touched.
 ```
 
 ---
@@ -54,144 +54,59 @@ This may take a minute.
 ## Step 1 — Run the learner
 
 Launch `cli-learner` agent with:
-- `PROJECT_PATH` — the confirmed project path
-- `SINCE` — date of last SUMMARY.md update (or all-time if first run)
+- `PROJECT_PATH` — confirmed project path
+- `SINCE` — date of last SUMMARY.md update, or all-time
 - `FOCUS` — `all`
 
-Wait for `LEARNER_COMPLETE` before continuing.
+Wait for `LEARNER_COMPLETE`.
 
 ---
 
-## Step 2 — Present findings
+## Step 2 — Show what was learned
 
-After the learner finishes, read `.cli/learnings/PROPOSALS.md` and present clearly:
+Read the new `.cli/learnings/SUMMARY.md` and present it to the user:
 
 ```
-Session analysis complete — [N] sessions, [date range]
+Memory updated — [N] sessions analyzed
 
-Proposals ([N] total):
+Added to .cli/learnings/:
 
-HIGH PRIORITY
-  1. [type] [title]
-     [one-line description of what to change and why]
+  watch-out.md   — [N] things to know before touching this project
+  patterns.md    — [N] established patterns to follow
+  decisions.md   — [N] choices already made
+  errors.md      — [N] known errors with fixes
 
-  2. [type] [title]
-     [one-line description]
+Top findings:
+  ⚠  [most important watch-out]
+  ✓  [most useful established pattern]
+  —  [key decision that's been settled]
 
-MEDIUM
-  3. [type] [title]
-  ...
-
-LOW
-  ...
-
-Full details in .cli/learnings/PROPOSALS.md
-
-Apply all? Or pick which ones to review first.
-(yes / pick / skip / show details for #N)
+These load automatically at the start of future sessions on this project.
 ```
 
 ---
 
-## Step 3 — Review and apply
+## Step 3 — Archive old sessions
 
-For each approved proposal, apply it immediately.
-
-**`rule-update`** — edit the existing rule file:
-```
-Updating rules/[rule].md — [what's changing]
-```
-Read the current rule, apply the specific addition or fix, preserve all existing content.
-
-**`new-rule`** — create a new rule file:
-Follow the rule template exactly:
-```markdown
----
-name: [subject]
-description: [one line]
-metadata:
-  tags: [tag1, tag2]
----
-
-# [Subject]
-
-## Prerequisites
-- [what's needed]
-
-[content with concrete TypeScript examples]
-```
-
-**`scaffold-change`** — edit the relevant SKILL.md:
-Read the current skill file, add the new file to the generation list in the correct phase.
-
-**`hook-update`** — edit `hooks/check_conventions.py`:
-Read the current script, apply the specific check addition.
-
-**`agent-update`** — edit the relevant agent markdown:
-Read the agent file, apply the targeted instruction addition.
-
-After each change:
-```
-✓ Applied: [proposal title]
-  → [file path changed]
-```
-
----
-
-## Step 4 — Confirm the plugin changes are correct
-
-After applying all approved changes, run a quick sanity check:
-
-```bash
-# Verify rule files have required frontmatter
-grep -rL "^---" rules/*.md 2>/dev/null && echo "missing frontmatter" || echo "all rules have frontmatter"
-
-# Verify hooks script still parses
-python3 -c "import json; json.load(open('hooks/hooks.json'))" && echo "hooks.json valid"
-
-# Verify skill files have required frontmatter
-grep -rL "^name:" skills/*/SKILL.md 2>/dev/null && echo "missing name" || echo "all skills have name"
-```
-
-Fix any issues before finishing.
-
----
-
-## Step 5 — Compress and archive
-
-After applying proposals:
-
-1. Update `.cli/learnings/SUMMARY.md` — add an entry for this learning run
-2. Archive old session logs:
 ```bash
 mkdir -p .cli/sessions/archive
-# Keep 5 most recent daily log files, archive the rest
 ls -t .cli/sessions/*.jsonl 2>/dev/null | grep -v errors_buffer | tail -n +6 | xargs -I{} mv {} .cli/sessions/archive/ 2>/dev/null || true
-echo "archived"
 ```
 
-3. Tell the user:
+Tell the user:
 ```
-Learning run complete.
+Archived [N] older session logs → .cli/sessions/archive/
+[N] recent sessions kept active for next run.
 
-Applied: [N] changes
-  [list of files changed]
-
-Archived: [N] old session logs → .cli/sessions/archive/
-Active logs: [N] kept
-
-The cli-skill plugin has been updated. Future sessions will use these improvements.
-
-If you're happy with the changes, commit them:
-  cd [cli-skill path] && git add -A && git commit -m "learn: [summary of improvements]"
+Commit when ready:
+  git add .cli/learnings/ && git commit -m "learn: update project memory"
 ```
 
 ---
 
 ## Notes
 
-- Proposals are never auto-applied — you always review first.
-- Partial approval is fine — skip anything you're not sure about.
-- Skipped proposals stay in `PROPOSALS.md` for next time.
-- Run `/cli:learn` again after 5–10 more sessions for the next round.
-- The learner improves the plugin, not just the project — changes go to `rules/`, `skills/`, `agents/`, `hooks/`.
+- Run again after every 5–10 sessions — learnings compound.
+- The learner merges with existing `.cli/learnings/` — it doesn't overwrite prior runs.
+- Archived sessions are kept, never deleted.
+- To see what future sessions will load, read `.cli/learnings/SUMMARY.md`.
