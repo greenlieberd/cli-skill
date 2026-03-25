@@ -1,23 +1,37 @@
 # Contributing to cli-skill
 
-cli-skill is free and open source, sponsored by [Propane](https://usepropane.ai) and created by [Dennis Green-Lieber](https://github.com/greenlieberd).
+cli-skill is open source, sponsored by [Propane](https://usepropane.ai) and created by [Dennis Green-Lieber](https://github.com/greenlieberd).
 
 ---
 
-## What this project is
+## What you're contributing to
 
-A Claude Code plugin — pure markdown and JSON, no runnable code (except hooks). It teaches Claude how to plan, scaffold, audit, and build production-quality CLI tools using Bun, Ink, and ANSI patterns.
+This is a Claude Code plugin — pure markdown and JSON, no runnable code (except hooks). It teaches Claude how to design and build CLI tools that feel like real software. HUDs that resize cleanly. Wizards with proper progress tracking. Output that doesn't look like a dump.
 
-Contributing means improving the instructions Claude follows, not writing application code.
+Contributing means improving the instructions Claude follows, not writing application code. A good contribution makes the next CLI Claude builds slightly better than the last one.
+
+---
+
+## What has the most impact
+
+**The A-list rules** — these cover 90% of what gets built. If they're wrong, everything built from them is wrong.
+
+`hud-screens` · `ascii-art` · `colors` · `source-results` · `models` · `display-system` · `error-recovery` · `testing`
+
+Improvements here — better examples, caught edge cases, clearer guidance — have the highest leverage.
+
+**The assets** — `skills/cli-new/assets/` are the reference implementations copied into every new project. Quality here equals quality in every generated CLI.
 
 ---
 
 ## Ways to contribute
 
 ### Add or improve a rule
-Rules live in `rules/`. Each rule covers one subject (e.g. `caching.md`, `retry.md`).
+
+Rules live in `rules/`. Each rule covers one subject (`caching.md`, `retry.md`).
 
 Every rule must have:
+
 ```markdown
 ---
 name: subject-name
@@ -34,19 +48,53 @@ metadata:
 [content — concrete TypeScript examples, not abstract advice]
 ```
 
-Rules must use subject names (`caching.md`), never `how-to-` prefixes or numbers.
+Rules must use subject names (`caching.md`) — never `how-to-` prefixes or numbers. If a rule doesn't have working TypeScript, it's not done.
 
 ### Improve an agent
-Agents live in `agents/`. They're the workhorses — they do the actual interview, analysis, and file-writing work. If an agent produces consistently wrong output, improve its instructions.
+
+Agents live in `agents/`. They do the actual interview, analysis, and file-writing. If an agent produces consistently wrong output, improve its instructions.
+
+Every agent needs correct frontmatter:
+
+```markdown
+---
+name: agent-name
+description: one-line description
+allowed-tools: Read, Write, Glob, Grep, LS
+model: sonnet
+color: blue
+---
+```
+
+Use `allowed-tools:` — not `tools:`. Use `/plugin-dev:agent-creator` when building a new one.
 
 ### Improve a skill
-Skills live in `skills/`. They're thin orchestrators — they load context, launch agents, and show results. Skills should not contain interview logic (that belongs in agents).
+
+Skills live in `skills/`. They're thin orchestrators — load context, launch agents, show results. Skills must not contain interview logic (that belongs in agents).
+
+Description field must be third-person: `"This skill should be used when..."` — not `"Use this skill when..."`. The description is how Claude decides whether to load the skill; second-person phrasing reduces reliability.
 
 ### Improve assets
-Assets live in `skills/cli-new/assets/`. These are reference implementations that get copied into every new project. Quality here = quality in every generated CLI.
+
+Assets live in `skills/cli-new/assets/`. These get adapted into every new project. The patterns here — resize handling, theme import, model shape — directly affect the quality of every CLI this plugin builds.
 
 ### Report a bug
-Open an issue. Include: what skill you ran, what you expected, what happened.
+
+Open an issue. Include: which skill you ran, what you expected, what happened.
+
+---
+
+## Required tools — use these, not manual review
+
+This plugin has plugin-dev skills specifically for validating and reviewing itself. **Use them. Don't submit a PR without running them.**
+
+| When | Tool |
+|------|------|
+| After editing any SKILL.md | `/plugin-dev:skill-reviewer` |
+| After any structural change | `/plugin-dev:plugin-validator` |
+| Creating a new agent | `/plugin-dev:agent-creator` |
+
+These catch issues invisible in a text editor — wrong field names, description antipatterns, missing frontmatter, orphaned files. They're the equivalent of running a type checker before committing.
 
 ---
 
@@ -55,40 +103,10 @@ Open an issue. Include: what skill you ran, what you expected, what happened.
 - No build step — edit markdown and JSON directly
 - Rules must have frontmatter + Prerequisites block
 - Skills must be thin wrappers — interview logic belongs in agents
-- Assets must follow all A-list rules (hud-screens, ascii-art, colors, source-results, models, display-system, error-recovery, testing)
+- Assets must follow all A-list rules
+- Descriptions must be third-person
+- `allowed-tools:` not `tools:` in agent frontmatter
 - No API keys, internal service URLs, or private data in any file
-
-## A-list rules (core — these must be excellent)
-
-`hud-screens` · `ascii-art` · `colors` · `source-results` · `models` · `display-system` · `error-recovery` · `testing`
-
-These eight rules cover 90% of what gets built. Improvements here have the most impact.
-
----
-
-## Required tools when working on this plugin
-
-Use the plugin-dev skills that ship with Claude Code. **Do not edit plugin files by hand and submit without running these.**
-
-### After editing a skill
-```
-/plugin-dev:skill-reviewer
-```
-Checks description phrasing, trigger coverage, content quality, and progressive disclosure. Run on every SKILL.md you touch.
-
-### After any structural change
-```
-/plugin-dev:plugin-validator
-```
-Validates plugin.json, marketplace.json, all skill frontmatter, all agent frontmatter, hooks.json, and rules structure. Run before every PR.
-
-### When creating a new agent
-```
-/plugin-dev:agent-creator
-```
-Generates correct frontmatter and structure. Don't write agent files from scratch.
-
-These tools catch issues (wrong field names, missing required fields, description antipatterns) that are invisible in a text editor. They're the equivalent of running `bun typecheck` before committing.
 
 ---
 
@@ -98,11 +116,5 @@ These tools catch issues (wrong field names, missing required fields, descriptio
 2. Make your changes
 3. Run `/plugin-dev:skill-reviewer` on any SKILL.md you touched
 4. Run `/plugin-dev:plugin-validator` — must pass with zero critical issues
-5. Test by installing locally: `claude plugin install ./cli-skill`
+5. Test locally: `claude plugin marketplace add ./cli-skill && claude plugin install cli@cli`
 6. Open a PR with a clear description of what changed and why
-
----
-
-## Code of conduct
-
-Be direct. Be specific. Prefer concrete examples over abstract advice. If a rule doesn't have working TypeScript, it's not done.
