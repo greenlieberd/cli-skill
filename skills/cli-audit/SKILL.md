@@ -33,47 +33,18 @@ Which CLI should I audit?
 
 ---
 
-## Step 1 — Load system context
+## Step 1 — Quick snapshot
 
-Before exploring the code, read everything that already exists about this project.
-
-Read in order (skip gracefully if not found):
-1. `.cli/plan/CONTEXT.md` — what the project is, v0.1 scope, conventions
-2. `.cli/plan/DECISIONS.md` — why each architecture choice was made
-3. `.cli/plan/PLAN.md` — current task progress, v0.1 vs v0.2+ breakdown
-4. `.cli/learnings/SUMMARY.md` — patterns, watch-outs, known errors from past sessions
-5. `.cli/learnings/decisions.md` — choices already made, don't re-open
-6. `.cli/audit/EXPLORE.md` — last explore findings if present
-
-Then show a system snapshot:
+Using what's already loaded above, show a fast system snapshot — no additional file reads yet:
 
 ```
-System context loaded — [project-name]
+[project-name]  [plan-status from PLAN.md status]
 
-  ┌─────────────────┬──────────────────────────────────────────────────┐
-  │ Interface       │ [from CONTEXT.md or "unknown"]                   │
-  │ AI              │ [tiers + purpose or "none"]                      │
-  │ APIs            │ [list or "none"]                                 │
-  │ Output          │ [type]                                           │
-  │ Distribution    │ [how it's used]                                  │
-  └─────────────────┴──────────────────────────────────────────────────┘
-
-  Plan progress: [X of N v0.1 tasks complete]
-
-  Feature set:
-  ┌──────────────────────────────┬─────────┬──────────────────────────┐
-  │ Feature                      │ Version │ Status                   │
-  ├──────────────────────────────┼─────────┼──────────────────────────┤
-  │ [feature from plan]          │ v0.1    │ ✓ done / ☐ pending       │
-  │ [feature from plan]          │ v0.1    │ ✓ done / ☐ pending       │
-  │ [feature from v0.2+ list]    │ v0.2+   │ parked                   │
-  └──────────────────────────────┴─────────┴──────────────────────────┘
-
-  [If learnings exist:]
-  Memory: [key watch-out from SUMMARY.md]
+  Interface: [from CONTEXT.md or "unknown"]
+  Memory: [key watch-out from SUMMARY.md, or "none yet"]
 ```
 
-If CONTEXT.md and PLAN.md don't exist yet, note it and continue — the explore step will fill in what's missing.
+If CONTEXT.md is missing: "No plan found. I'll explore the project in Step 3."
 
 ---
 
@@ -115,6 +86,34 @@ After this we update the plan and decide what to build next.
 ```
 
 Update PLAN.md to reflect changes before continuing.
+
+---
+
+## Step 2b — Load context for the goal
+
+Read only what the chosen goal needs. Do not load files speculatively.
+
+**A (fix) or B (improve UX) or E (release prep):**
+Read `.cli/plan/PLAN.md` in full — need the task list. Skip DECISIONS.md.
+
+**C (add feature):**
+Read `.cli/plan/PLAN.md` + `.cli/plan/DECISIONS.md` — need prior decisions to avoid contradicting them.
+
+**D (feature set management):**
+Read `.cli/plan/PLAN.md` in full — need both v0.1 and v0.2+ lists to display the feature table.
+
+**F (full audit):**
+Read `.cli/plan/PLAN.md` + `.cli/plan/DECISIONS.md` + `.cli/learnings/decisions.md` if present + `.cli/audit/EXPLORE.md` if fresh (< 7 days old).
+
+Show the feature table now if goal is D or F:
+```
+  ┌──────────────────────────────┬─────────┬──────────────────────────┐
+  │ Feature                      │ Version │ Status                   │
+  ├──────────────────────────────┼─────────┼──────────────────────────┤
+  │ [feature]                    │ v0.1    │ ✓ done / ☐ pending       │
+  │ [feature]                    │ v0.2+   │ parked                   │
+  └──────────────────────────────┴─────────┴──────────────────────────┘
+```
 
 ---
 

@@ -18,8 +18,6 @@ Directory: !`pwd`
 Bun: !`bun --version 2>/dev/null || echo "NOT INSTALLED"`
 Git: !`git rev-parse --is-inside-work-tree 2>/dev/null && echo "repo" || echo "no repo"`
 Existing package.json: !`[ -f package.json ] && python3 -c 'import json; d=json.load(open("package.json")); print(d.get("name","?"))' 2>/dev/null || echo "none"`
-Rules: !`ls "${CLAUDE_SKILL_DIR}/../../rules/" 2>/dev/null`
-Assets: !`ls "${CLAUDE_SKILL_DIR}/../cli-new/assets/" 2>/dev/null || ls "${CLAUDE_SKILL_DIR}/assets/" 2>/dev/null`
 Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null || echo "none"`
 
 ---
@@ -117,35 +115,33 @@ Read `PLAN_COMPLETE` fields. Use this mapping:
    (note: `.cli/plan/`, `.cli/audit/`, `.cli/learnings/` are committed — only `sessions/` is gitignored)
 3. `.env.example` — one line per key, `# description` above each
 4. `package.json` — scripts: hud, test, and optionally mcp/serve/run
-5. `src/theme.ts` — set ACTIVE_THEME to the value from PLAN_COMPLETE `theme` field (read assets/theme.ts)
-6. `src/models.ts` — only the tiers from PLAN_COMPLETE (read assets/models.ts)
-7. `src/configure.ts` — copy verbatim from assets/configure.ts
+5. `src/theme.ts` — set ACTIVE_THEME from PLAN_COMPLETE `theme` field
+   → Read `${CLAUDE_SKILL_DIR}/assets/theme.ts` for structure
+6. `src/models.ts` — include only the tiers from PLAN_COMPLETE `ai` field; skip if ai = none/piped
+   → Read `${CLAUDE_SKILL_DIR}/assets/models.ts` for structure
+7. `src/configure.ts` — copy verbatim from `${CLAUDE_SKILL_DIR}/assets/configure.ts`
 8. `src/cli.ts` — routes to hud/wizard/run, under 80 lines
-9. Interface files — read assets/ for reference, adapt for this project; import THEME from src/theme.ts
-10. Source files — only sources in v0.1 scope
-11. Server + UI (if browser, and in v0.1)
-12. MCP server (if mcp, and in v0.1)
-13. `tests/cli.test.ts` — **required, not optional** (see testing rules below)
 
-**HUD rules** (read `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md` and `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`):
+**If interface = hud or hybrid:**
+Read `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md` and `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md` before writing hud.ts.
+Read `${CLAUDE_SKILL_DIR}/assets/hud.ts` as the reference implementation — adapt menu items, logo, and screen names for this project.
 
-Every HUD gets ASCII art. No exceptions — it's what makes it feel like a real tool.
-
-- Read `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md` — use the 6-line block letter pattern
-- Draw the tool name as a logo at the top of the home screen
-- Skip the logo if terminal < 48 cols, show the plain name instead
-- Menu items must reflect v0.1 features only — no placeholder items like "Feature coming soon"
-  - Each menu item does something real in this version
-  - If a feature is v0.2+, it is not in the menu yet
-- `process.stdout.on('resize', redraw)` — required, always
+Rules for hud.ts:
+- ASCII art logo at the top of home screen — required (use the 6-line block letter pattern from ascii-art.md)
+- Skip logo if terminal < 48 cols, show plain name instead
+- Menu items = v0.1 features only — no placeholders, no "coming soon"
+- `process.stdout.on('resize', redraw)` — required, no exceptions
 - `Math.min(process.stdout.columns ?? 80, 66)` for all widths
-- If terminal < 50 cols, show a readable message instead of a broken layout
+- If terminal < 50 cols, show a readable fallback message
 
-**Wizard rules** (read `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md`):
-- Extend assets/App.tsx with this project's actual steps
+**If interface = wizard or hybrid:**
+Read `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md` before writing cli/ files.
+Read `${CLAUDE_SKILL_DIR}/assets/App.tsx`, `Frame.tsx`, `SelectList.tsx` as reference — adapt steps for this project.
+
+Rules for wizard:
 - NEXT and PREV maps must cover every step — no dead ends
 - Every step gets exactly `onNext(value)` and `onBack()` props
-- `cli/index.tsx` (entry point — no asset, write from scratch):
+- `cli/index.tsx` (no asset — write from scratch):
   ```tsx
   #!/usr/bin/env bun
   import React from 'react'
@@ -154,16 +150,22 @@ Every HUD gets ASCII art. No exceptions — it's what makes it feel like a real 
   render(React.createElement(App))
   ```
 
-**Testing rules** (read `${CLAUDE_SKILL_DIR}/../../rules/testing.md`):
+**If sources ≠ none:**
+Read `${CLAUDE_SKILL_DIR}/../../rules/source-results.md` before writing any source file.
+Each source returns `SourceResult` — never throws.
 
-Tests are part of v0.1, not a later task. Write them now, before the quality review.
+9. Source files — only sources in v0.1 scope, one file each
+10. `src/server.ts` + `ui/index.html` — if output includes browser
+11. `src/mcp.ts` — if distribution includes mcp
 
-`tests/cli.test.ts` must cover:
+**Tests** (read `${CLAUDE_SKILL_DIR}/../../rules/testing.md` before writing):
+
+`tests/cli.test.ts` is required — write it now, not later.
 - `configure.ts` — `loadEnv()` loads keys, `maskValue()` masks correctly
-- `src/models.ts` — model IDs are strings, tiers exist, no hardcoded values
-- At least one source or command — test the happy path and one error path
-- Use `global.fetch = mock(...)` in `beforeEach`, restore in `afterEach`
-- Run after scaffold: `bun test` must pass before moving to quality review
+- `src/models.ts` — model IDs are strings, tiers exist (skip if ai = none/piped)
+- At least one source or command — happy path + one error path
+- `global.fetch = mock(...)` in `beforeEach`, restore in `afterEach`
+- Run `bun test` — must pass before quality review
 
 Commit:
 ```bash
@@ -178,7 +180,7 @@ Launch in parallel:
 - `cli-reviewer correctness` — broken imports, wrong paths, missing types, env loaded late
 - `cli-reviewer conventions` — models.ts, SourceResult, gitignore, no DB patterns
 
-Read all rules referenced in the Rules section below before reviewing. Apply every fix.
+Apply every fix the reviewers find.
 
 ```bash
 git add -A && git commit -m "fix: reviewer corrections"
@@ -237,24 +239,42 @@ Tell the user: "Run `git push` when you're ready to share this."
 
 ---
 
-## Rules reference
+## Rules — read only what the plan requires
 
-Read when generating the corresponding files:
+Do not load rules speculatively. Read each rule immediately before writing the files it covers.
 
-- HUD screen loop, resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`
-- ASCII art logo, block letters, width guard: `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`
-- Wizard steps, Frame, progress dots: `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md`
-- Colors and ANSI palette: `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
-- Display system (spinner, done/skip/fail): `${CLAUDE_SKILL_DIR}/../../rules/display-system.md`
-- Gentle terminal, streaming, piping: `${CLAUDE_SKILL_DIR}/../../rules/gentle-terminal.md`
-- SourceResult, error handling: `${CLAUDE_SKILL_DIR}/../../rules/source-results.md`
-- Model tiers, streaming, caching: `${CLAUDE_SKILL_DIR}/../../rules/models.md`
-- Browser view, SSE: `${CLAUDE_SKILL_DIR}/../../rules/browser-views.md`
-- MCP server: `${CLAUDE_SKILL_DIR}/../../rules/mcp-servers.md`
-- Flat file storage: `${CLAUDE_SKILL_DIR}/../../rules/flat-files.md`
-- Error recovery, crash handling: `${CLAUDE_SKILL_DIR}/../../rules/error-recovery.md`
-- Environment setup, .env loading: `${CLAUDE_SKILL_DIR}/../../rules/environment-setup.md`
-- Configuration wizard: `${CLAUDE_SKILL_DIR}/../../rules/configuration.md`
-- Retry + backoff: `${CLAUDE_SKILL_DIR}/../../rules/retry.md`
-- Testing, mock fetch: `${CLAUDE_SKILL_DIR}/../../rules/testing.md`
-- Conventions: `${CLAUDE_SKILL_DIR}/../../rules/conventions.md`
+**Always:**
+- `${CLAUDE_SKILL_DIR}/../../rules/conventions.md` — before writing any file
+- `${CLAUDE_SKILL_DIR}/../../rules/environment-setup.md` — before writing configure.ts / .env.example
+- `${CLAUDE_SKILL_DIR}/../../rules/testing.md` — before writing tests/cli.test.ts
+
+**If interface = hud or hybrid:**
+- `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/display-system.md`
+
+**If interface = wizard or hybrid:**
+- `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
+
+**If sources ≠ none:**
+- `${CLAUDE_SKILL_DIR}/../../rules/source-results.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/retry.md`
+
+**If ai ≠ none and ≠ piped:**
+- `${CLAUDE_SKILL_DIR}/../../rules/models.md`
+
+**If output includes browser:**
+- `${CLAUDE_SKILL_DIR}/../../rules/browser-views.md`
+
+**If distribution includes mcp:**
+- `${CLAUDE_SKILL_DIR}/../../rules/mcp-servers.md`
+
+**If writing to .propane/ or output/ storage:**
+- `${CLAUDE_SKILL_DIR}/../../rules/flat-files.md`
+
+**Additional (read if working on the relevant area):**
+- `${CLAUDE_SKILL_DIR}/../../rules/gentle-terminal.md` — streaming, piped output
+- `${CLAUDE_SKILL_DIR}/../../rules/error-recovery.md` — crash handling, process.exit()
+- `${CLAUDE_SKILL_DIR}/../../rules/configuration.md` — configure.ts patterns
