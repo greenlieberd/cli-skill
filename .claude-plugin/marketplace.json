@@ -7,15 +7,15 @@
   },
   "repository": "https://github.com/greenlieberd/cli-skill",
   "metadata": {
-    "description": "UX-first CLI builder for Bun/Ink/ANSI — wizard-style planning, conditional rule loading, and project memory that compounds across sessions.",
+    "description": "Build CLIs worth running every morning. A UX design system for the terminal — plan the experience, scaffold exactly what you planned, improve it session by session. For designers, engineers, and founders who want great terminal tools without one-size-fits-all code generation.",
     "category": "development",
-    "tags": ["cli", "bun", "ink", "ansi", "hud", "wizard", "scaffold", "mcp", "audit"]
+    "tags": ["cli", "bun", "ink", "ansi", "hud", "wizard", "scaffold", "mcp", "audit", "ux", "design"]
   },
   "plugins": [
     {
       "name": "cli",
       "source": "./",
-      "description": "Five skills for designing and building production CLIs with great UX.",
+      "description": "Five skills for designing, scaffolding, auditing, and improving terminal tools. Treats the CLI as a design surface — not just a script runner.",
       "version": "0.2.0",
       "author": {
         "name": "Propane"
@@ -24,23 +24,23 @@
       "skills": [
         {
           "command": "/cli:cli-new",
-          "description": "Plan + scaffold a new CLI from scratch. Wizard interview → conditional scaffold → quality review → ship checklist."
+          "description": "Full build cycle: plan the UX, scaffold exactly what the plan says, review, verify, ship. The entry point for new CLIs."
         },
         {
           "command": "/cli:cli-plan",
-          "description": "Planning session only. 5-step wizard interview → .cli/plan/ (CONTEXT.md, DECISIONS.md, PLAN.md)."
+          "description": "Plan before you build. 5-step interview → CONTEXT.md, DECISIONS.md, PLAN.md in .cli/plan/. Use this when you want to think before touching code."
         },
         {
           "command": "/cli:cli-explore",
-          "description": "Read-only analysis of an existing CLI. Architecture map, convention gaps, 5 files to read first."
+          "description": "Understand what's already there. Read-only analysis: architecture map, convention gaps, the 5 files to read before making any changes."
         },
         {
           "command": "/cli:cli-audit",
-          "description": "Improve an existing CLI. Loads context, explores, plans, executes tasks with commits."
+          "description": "Improve what exists. Loads all context first, then fixes, extends, or audits — one task at a time with commits."
         },
         {
           "command": "/cli:cli-learn",
-          "description": "Distill session history into project memory (.cli/learnings/). Compounds across sessions."
+          "description": "Turn session history into project memory. Gets smarter the more you use it — patterns, gotchas, decisions already made."
         }
       ]
     }

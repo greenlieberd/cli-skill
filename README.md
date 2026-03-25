@@ -1,20 +1,38 @@
 # cli-skill
 
-> A Claude Code plugin for building CLI tools that feel like real software — and get better every time you work on them.
+> Build CLIs worth running every morning.
 
 ---
 
 ## Why this exists
 
-There's something honest about a CLI tool. No design system, no component library, no browser abstraction layer. Just you, the terminal, and a blinking cursor. If it feels good, you built it right.
+The first time you open a terminal, something clicks. There's no design system, no component library, no browser between you and what you're doing. It's stripped away — and that's the power of it.
 
-Claude Code is proof of this. It's a CLI — but navigating it feels like using software that cares about the experience. The spinner timing. The way output breathes. The keyboard shortcuts that just work. The layout that adapts when you resize the window. That's not an accident. That's the result of hundreds of intentional decisions about layout, color, feedback, and flow.
+Then you see Claude Code. And you realize a CLI doesn't have to be a wall of text. It can have menus, selectors, a heads-up display that holds its shape while the world changes around it. Spinners that breathe. Layouts that adapt. The kind of intentionality that makes software feel like someone cared.
 
-Most CLIs skip all of that. Especially AI-generated ones.
+That's what made this plugin worth building. Months of building production CLIs — a daily intelligence dashboard, a video generation system, an ad image pipeline — and feeling like the UX quality was never quite there. Like something was missing between "it runs" and "it feels right." And then wondering: shouldn't anyone with a great idea also get a great CLI experience?
 
-When you ask an AI to build a CLI today, you usually get a pile of `console.log()` calls dressed up as a tool. It runs. It doesn't feel like anything. You ship it a little embarrassed.
+**This plugin isn't a code generator. It's a UX design system for the terminal.**
 
-**This plugin closes that gap.**
+It plans the experience before writing a line. It thinks about how someone moves through your tool, what they see first, where they go next, how it handles failure. Then it builds exactly that — nothing more, nothing less.
+
+---
+
+## Who it's for
+
+Small nerds who want to build power tools.
+
+Designers, engineers, founders — anyone with an idea that lives at the intersection of volume work and good taste. Maybe it's a CLI that runs on a messy folder every morning and generates a thousand pieces of structured content. Maybe it's a daily briefing that pulls from three APIs and lands in the terminal before you open Slack. Maybe it's brand-specific — a CLI for your design system that asks "is this for marketing or internal? should it be funny?" — and outputs something that actually follows your standards.
+
+The idea is simple: **everyone with a great idea should also get a great CLI experience.** Not just working code. A designed, shareable, learnable tool you're proud to run in front of someone.
+
+---
+
+## The philosophy: many small CLIs, not one big one
+
+Keep planning light. Build something small that works well, then build another one. Ten focused CLIs you run regularly will do more for you than one complex CLI you never finish.
+
+This plugin is designed around that rhythm. Every skill runs standalone. Every project gets its own memory. Build one, learn from it, and the next one starts smarter.
 
 ---
 
@@ -72,11 +90,13 @@ Every task runs with a confirm step, a commit, and a check-off in the plan befor
 
 ### It keeps learning
 
-This is the part that compounds.
+This is the part that makes it worth coming back.
 
-Every session gets logged to `.cli/sessions/` — what ran, what broke, what changed. After a few sessions, `/cli:cli-learn` reads those logs and distills them into project memory: patterns that work for this specific project, things to watch out for, decisions that were already made and shouldn't be reopened.
+Every session is logged to `.cli/sessions/` — what ran, what broke, what changed. After a few sessions, `/cli:cli-learn` reads those logs and distills them into project memory: what's working for this specific project, what to watch out for, decisions that were already made and shouldn't be reopened.
 
-That memory lives in `.cli/learnings/SUMMARY.md`. Every future session starts by reading it. Claude comes in knowing the project's history — the gotchas, the preferences, the choices that were already debated. You don't re-explain the same things. The tool gets better at understanding your project the longer you work on it.
+That memory lives in `.cli/learnings/SUMMARY.md`. Every future session starts by reading it. You stop re-explaining the same context. The system stops repeating the same mistakes. The more you work on a project, the better it gets at knowing how that project works.
+
+This is the improvement loop that makes the whole thing compound — and what you're actually investing in when you run `/cli:cli-learn` after a few sessions.
 
 ---
 
@@ -92,8 +112,6 @@ Every project gets a `.cli/` folder that travels with the repo. It's the project
     PLAN.md             — living task list: v0.1 done/pending, v0.2+ parked
   audit/                ← committed, shared with the team
     EXPLORE.md          — architecture map, patterns, gaps
-    GAPS.md             — convention violations found
-    FIXES.md            — prioritized improvement list
   learnings/            ← committed, shared with the team
     SUMMARY.md          — loaded at every session start
     patterns.md         — what works for this project
