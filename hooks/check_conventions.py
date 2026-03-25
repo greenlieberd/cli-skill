@@ -6,7 +6,12 @@ Does not block (exit 0 always). Issues appear as Claude system messages.
 import json
 import sys
 
-data = json.load(sys.stdin)
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print(json.dumps({"continue": True}))
+    sys.exit(0)
+
 inp = data.get('tool_input', {})
 
 file_path = inp.get('file_path', '') or ''

@@ -1,6 +1,6 @@
 ---
 name: cli-learn
-description: Use this skill to distill session history into project memory. Triggers on "learn from sessions", "what have we learned", "compress session logs", "summarize what's happened", "what keeps going wrong", or after a few sessions when you want future work on this project to be smarter. Reads .cli/sessions/, builds .cli/learnings/ — watch-out, patterns, decisions, errors. Never touches the cli-skill framework.
+description: This skill should be used to distill session history into project memory. Triggers on "learn from sessions", "what have we learned", "compress session logs", "summarize what's happened", "what keeps going wrong", or after a few sessions when you want future work on this project to be smarter. Reads .cli/sessions/, builds .cli/learnings/ — watch-out, patterns, decisions, errors. Never touches the cli-skill framework.
 argument-hint: "[path/to/cli-project]"
 model: sonnet
 effort: medium

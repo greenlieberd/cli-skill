@@ -1,0 +1,7 @@
+{
+  "name": "has-violations",
+  "scripts": {
+    "hud": "bun src/hud.ts",
+    "test": "bun test"
+  }
+}

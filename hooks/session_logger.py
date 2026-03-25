@@ -119,13 +119,35 @@ def main():
         sessions_dir.mkdir(parents=True, exist_ok=True)
 
         ts = datetime.now(timezone.utc)
+        usage = event.get("usage", {})
+
+        # Token spend with cost estimates (Anthropic pricing, March 2026)
+        input_tokens  = usage.get("input_tokens", 0)
+        output_tokens = usage.get("output_tokens", 0)
+        cache_read    = usage.get("cache_read_input_tokens", 0)
+        cache_write   = usage.get("cache_creation_input_tokens", 0)
+
+        # Cost per 1M tokens: haiku $0.25/$1.25, sonnet $3/$15, opus $15/$75
+        # Using sonnet pricing as conservative default (skills use sonnet)
+        cost_usd = round(
+            (input_tokens * 3 + cache_read * 0.3 + cache_write * 3.75 + output_tokens * 15) / 1_000_000,
+            6
+        )
+
         entry = {
             "ts": ts.isoformat(),
             "project": get_project_name(cwd),
             "skill": detect_skill(cwd),
             "changed_files": get_recent_changes(cwd),
             "errors": get_pending_errors(cwd),
-            "tokens": event.get("usage", {}),
+            "tokens": {
+                "input": input_tokens,
+                "output": output_tokens,
+                "cache_read": cache_read,
+                "cache_write": cache_write,
+                "total": input_tokens + output_tokens,
+                "cost_usd": cost_usd,
+            },
             "stop_reason": event.get("stop_reason", "unknown"),
         }
 

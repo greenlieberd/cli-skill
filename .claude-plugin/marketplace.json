@@ -1,21 +1,48 @@
 {
   "name": "cli",
   "owner": {
-    "name": "Propane"
+    "name": "Propane",
+    "email": "team@usepropane.ai",
+    "url": "https://usepropane.ai"
   },
+  "repository": "https://github.com/greenlieberd/cli-skill",
   "metadata": {
-    "description": "UX-first CLI builder for Bun/Ink/ANSI — plan, scaffold, explore, and audit production CLIs. Encodes patterns from real Propane tools."
+    "description": "UX-first CLI builder for Bun/Ink/ANSI — wizard-style planning, conditional rule loading, and project memory that compounds across sessions.",
+    "category": "development",
+    "tags": ["cli", "bun", "ink", "ansi", "hud", "wizard", "scaffold", "mcp", "audit"]
   },
   "plugins": [
     {
       "name": "cli",
       "source": "./",
-      "description": "Five skills for designing and building production CLIs: /cli:new, /cli:plan, /cli:explore, /cli:audit, /cli:learn.",
-      "version": "0.1.0",
+      "description": "Five skills for designing and building production CLIs with great UX.",
+      "version": "0.2.0",
       "author": {
         "name": "Propane"
       },
-      "category": "development"
+      "category": "development",
+      "skills": [
+        {
+          "command": "/cli:cli-new",
+          "description": "Plan + scaffold a new CLI from scratch. Wizard interview → conditional scaffold → quality review → ship checklist."
+        },
+        {
+          "command": "/cli:cli-plan",
+          "description": "Planning session only. 5-step wizard interview → .cli/plan/ (CONTEXT.md, DECISIONS.md, PLAN.md)."
+        },
+        {
+          "command": "/cli:cli-explore",
+          "description": "Read-only analysis of an existing CLI. Architecture map, convention gaps, 5 files to read first."
+        },
+        {
+          "command": "/cli:cli-audit",
+          "description": "Improve an existing CLI. Loads context, explores, plans, executes tasks with commits."
+        },
+        {
+          "command": "/cli:cli-learn",
+          "description": "Distill session history into project memory (.cli/learnings/). Compounds across sessions."
+        }
+      ]
     }
   ]
 }

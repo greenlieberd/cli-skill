@@ -1,6 +1,6 @@
 ---
 name: cli-explore
-description: Use this skill when the user wants to understand an existing CLI — what it does, how it's built, what's good, what's broken. Triggers on "explore this CLI", "what does this tool do", "explain this project", "map this codebase", "what's wrong with my CLI", or any request to understand before changing anything. Read-only — no files are modified. Works great before cli:audit or cli:plan.
+description: This skill should be used when the user wants to understand an existing CLI — what it does, how it's built, what's good, what's broken. Triggers on "explore this CLI", "what does this tool do", "explain this project", "map this codebase", "what's wrong with my CLI", or any request to understand before changing anything. Read-only — no files are modified. Works great before cli:audit or cli:plan.
 argument-hint: "[path/to/cli-project]"
 model: haiku
 effort: medium
