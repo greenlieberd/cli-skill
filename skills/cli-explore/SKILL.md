@@ -42,7 +42,7 @@ This is read-only — nothing will be modified.
 
 ## Step 1 — Launch the explorer
 
-Run the `cli-explorer` agent on the confirmed path with this brief:
+Spawn the `cli-explorer` agent (via Task tool) on the confirmed path with this brief:
 
 > Map the CLI at [path]. Cover:
 > 1. How to run it — entry point, bun scripts, what `bun hud` / `bun run start` does

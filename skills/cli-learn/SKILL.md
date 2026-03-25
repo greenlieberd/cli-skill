@@ -2,7 +2,7 @@
 name: cli-learn
 description: This skill should be used to distill session history into project memory. Triggers on "learn from sessions", "what have we learned", "compress session logs", "summarize what's happened", "what keeps going wrong", or after a few sessions when you want future work on this project to be smarter. Reads .cli/sessions/, builds .cli/learnings/ — watch-out, patterns, decisions, errors. Never touches the cli-skill framework.
 argument-hint: "[path/to/cli-project]"
-model: sonnet
+model: haiku
 effort: medium
 context: fork
 allowed-tools: Read, Write, Glob, Grep, LS, Bash
@@ -86,19 +86,12 @@ These load automatically at the start of future sessions on this project.
 
 ---
 
-## Step 3 — Archive old sessions
+## Step 3 — Confirm and commit
 
-```bash
-mkdir -p .cli/sessions/archive
-ls -t .cli/sessions/*.jsonl 2>/dev/null | grep -v errors_buffer | tail -n +6 | xargs -I{} mv {} .cli/sessions/archive/ 2>/dev/null || true
+The `cli-learner` agent handles archiving sessions automatically. Tell the user:
+
 ```
-
-Tell the user:
-```
-Archived [N] older session logs → .cli/sessions/archive/
-[N] recent sessions kept active for next run.
-
-Commit when ready:
+Memory updated. Commit when ready:
   git add .cli/learnings/ && git commit -m "learn: update project memory"
 ```
 

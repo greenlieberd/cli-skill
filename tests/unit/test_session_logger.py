@@ -112,8 +112,12 @@ class TestSessionEntry:
 
         logs = list((tmp_path / ".cli" / "sessions").glob("*.jsonl"))
         entry = json.loads(logs[0].read_text().strip())
-        assert entry["tokens"].get("input_tokens") == 12000
-        assert entry["tokens"].get("output_tokens") == 3400
+        tokens = entry["tokens"]
+        assert tokens.get("input") == 12000
+        assert tokens.get("output") == 3400
+        assert tokens.get("total") == 15400
+        assert "cost_usd" in tokens
+        assert isinstance(tokens["cost_usd"], float)
 
     def test_appends_to_existing_log(self, tmp_path):
         """Multiple sessions in same day should append to same file."""

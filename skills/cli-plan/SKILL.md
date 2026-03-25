@@ -17,7 +17,7 @@ A focused planning session. Loads existing context, then hands off to the `cli-p
 Directory: !`pwd`
 Argument: `$ARGUMENTS`
 Existing plan: !`[ -f "${ARGUMENTS:-.}/.cli/plan/PLAN.md" ] && echo "found" || echo "none"`
-Existing explore findings: !`[ -f "${ARGUMENTS:-.}/.cli/audit/EXPLORE.md" ] && echo "found" || echo "none"`
+Explore findings: !`cat "${ARGUMENTS:-.}/.cli/audit/EXPLORE.md" 2>/dev/null | head -60 || echo "none"`
 Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null || echo "none"`
 
 ---
@@ -43,7 +43,7 @@ Which would you like?
 
 ## Step 1 — Launch cli-planner
 
-Run the `cli-planner` agent. Pass:
+Spawn the `cli-planner` agent (via Task tool). Pass:
 - The mode (new / improve / continue)
 - Any EXPLORE.md findings (if improve mode)
 - `$ARGUMENTS` (project name or path)

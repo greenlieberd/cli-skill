@@ -176,9 +176,11 @@ git add -A && git commit -m "feat: scaffold [name] ([interface] / [ai] / [source
 
 ## Phase 5 — Quality review
 
-Launch in parallel:
-- `cli-reviewer correctness` — broken imports, wrong paths, missing types, env loaded late
-- `cli-reviewer conventions` — models.ts, SourceResult, gitignore, no DB patterns
+Spawn two `cli-reviewer` agents in parallel (via Task tool), each with a different focus brief:
+
+**Instance 1 brief:** "Review [project-path] for correctness: broken imports, wrong relative paths, missing types, env variables accessed before loadEnv(), missing return types on exported functions."
+
+**Instance 2 brief:** "Review [project-path] for conventions: hardcoded model IDs outside models.ts, sources that throw instead of returning SourceResult, missing .gitignore entries for output/ and .propane/, database imports."
 
 Apply every fix the reviewers find.
 

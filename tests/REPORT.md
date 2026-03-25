@@ -1,12 +1,12 @@
 # cli-skill test report
 
-> Generated: 2026-03-25 19:59:33
-> Duration: 2s
-> Results: 140 passed · 0 failed · 0 skipped · 140 total
+> Generated: 2026-03-25 20:02:58
+> Duration: 1s
+> Results: 138 passed · 3 failed · 0 skipped · 141 total
 
 ## Summary
 
-✅ All tests passed.
+❌ 3 test(s) failed.
 
 ## Results
 
@@ -95,22 +95,22 @@
 | ✓ | Detects hardcoded model ID in non-models file |
 | ✓ | Allows model IDs in models.ts |
 | ✓ | Detects throwing source file |
-| ✓ | All 56 pytest tests passed |
+| ✗ | **2 failed, 0 errors (from 57 tests)** |
 
 ## Token estimates
 
 | Workflow | Estimated tokens |
 |----------|-----------------|
-| /cli:cli-plan | 2918 |
-| /cli:cli-new | 5013 + rules |
-| /cli:cli-explore | 1759 |
-| /cli:cli-audit | 5743 + rules |
+| /cli:cli-plan | 2921 |
+| /cli:cli-new | 5096 + rules |
+| /cli:cli-explore | 1764 |
+| /cli:cli-audit | 5716 + rules |
 
 _Token estimates are static (file size / 4). Actual Claude API usage depends on conversation length and context loaded at runtime. Check .cli/sessions/YYYY-MM-DD.jsonl for real token counts after running skills._
 
 ## Failures
 
-_No failures._
+- ✗ 2 failed, 0 errors (from 57 tests)
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "cli",
-  "description": "UX-first CLI builder for Bun/Ink/ANSI — wizard-style planning, scaffold, explore, and audit production CLIs.",
+  "description": "UX-first CLI builder for Bun/Ink/ANSI — wizard-style planning, conditional rule loading, and project memory that compounds across sessions.",
   "version": "0.2.0",
   "author": {
     "name": "Propane",

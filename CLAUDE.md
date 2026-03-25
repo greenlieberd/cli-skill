@@ -14,27 +14,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   marketplace.json      — marketplace entry
 
 skills/
-  cli-explore/SKILL.md  — /cli:explore: read-only analysis of existing CLIs
-  cli-plan/SKILL.md     — /cli:plan: thin wrapper → launches cli-planner → .cli/plan/ folder
-  cli-new/SKILL.md      — /cli:new: plan + scaffold + verify
-    assets/             — reference files: hud.ts, theme.ts, models.ts, App.tsx, Frame.tsx, etc.
-  cli-audit/SKILL.md    — /cli:audit: load context + explore + plan + execute tasks
+  cli-new/SKILL.md      — /cli:cli-new: plan + scaffold + verify
+    assets/             — reference files: hud.ts, theme.ts, models.ts, configure.ts, App.tsx, Frame.tsx
+  cli-plan/SKILL.md     — /cli:cli-plan: thin wrapper → cli-planner agent → .cli/plan/ folder
+  cli-explore/SKILL.md  — /cli:cli-explore: read-only analysis of existing CLIs
+  cli-audit/SKILL.md    — /cli:cli-audit: load context → explore → plan → execute tasks with commits
+  cli-learn/SKILL.md    — /cli:cli-learn: session logs → project memory (.cli/learnings/)
 
 agents/
-  cli-planner.md        — goal-driven planning interview → .cli/plan/ folder
-  cli-explorer.md       — read-only analysis of existing CLIs
-  cli-architect.md      — architecture design (minimal vs modular)
-  cli-reviewer.md       — code review (correctness / completeness / conventions)
+  cli-planner.md        — goal-driven planning interview → .cli/plan/ (used by cli-new + cli-plan + cli-audit)
+  cli-explorer.md       — read-only codebase analysis → .cli/audit/EXPLORE.md (used by cli-explore + cli-audit)
+  cli-architect.md      — architecture blueprint for complex features (used by cli-audit feat tasks)
+  cli-reviewer.md       — correctness + convention review (used by cli-new Phase 5, parallel instances)
+  cli-learner.md        — session log compression → .cli/learnings/ (used by cli-learn)
 
-rules/                  — 42 subject-named rules with frontmatter + prerequisites
+rules/                  — 42 subject-named rules, loaded on-demand by interface type (not all at once)
   (see full list below)
 
 hooks/
-  hooks.json            — PreToolUse conventions + PostToolUse error capture + Stop session logger + SessionStart context
-  check_conventions.py  — warns on model IDs, throwing sources, DB imports (PreToolUse)
+  hooks.json            — PreToolUse + PostToolUse:Bash + Stop + SessionStart (inline bash for SessionStart)
+  check_conventions.py  — warns on model IDs, throwing sources, DB imports (PreToolUse:Write/Edit)
   error_capture.py      — buffers bash errors to .cli/sessions/.errors_buffer.jsonl (PostToolUse:Bash)
-  session_logger.py     — writes session summary to .cli/sessions/YYYY-MM-DD.jsonl (Stop)
-  load_context.sh       — session start reminder, scoped to CLI projects
+  session_logger.py     — writes session summary + token cost to .cli/sessions/YYYY-MM-DD.jsonl (Stop)
+
+tests/
+  run.sh                — test runner: ./tests/run.sh [--teardown] [--unit-only]
+  unit/                 — Python unit tests for all 3 hook scripts (140 tests, no Claude required)
+  fixtures/             — has-violations/ and clean-project/ for convention checker tests
 ```
 
 ## The .cli/ folder convention

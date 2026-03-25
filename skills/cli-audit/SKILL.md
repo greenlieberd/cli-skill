@@ -16,7 +16,7 @@ Full improvement cycle. Loads all existing context first, maps the current featu
 
 Directory: !`pwd`
 Target: `$ARGUMENTS`
-CONTEXT.md: !`cat "${ARGUMENTS:-.}/.cli/plan/CONTEXT.md" 2>/dev/null | head -40 || echo "none"`
+CONTEXT.md: !`cat "${ARGUMENTS:-.}/.cli/plan/CONTEXT.md" 2>/dev/null | head -80 || echo "none"`
 PLAN.md status: !`grep "^> Status:" "${ARGUMENTS:-.}/.cli/plan/PLAN.md" 2>/dev/null || echo "none"`
 Existing explore: !`[ -f "${ARGUMENTS:-.}/.cli/audit/EXPLORE.md" ] && echo "found" || echo "none"`
 Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null || echo "none"`
@@ -159,20 +159,16 @@ Full findings → .cli/audit/EXPLORE.md
 
 ## Step 4 — Plan improvements
 
-Run `cli-planner` in **improve mode** with:
+Spawn the `cli-planner` agent (via Task tool) in **improve mode** with:
 - The EXPLORE.md findings
-- The system context from Step 1
+- The system context already loaded (CONTEXT.md, PLAN.md)
 - The user's stated goal from Step 2
-- The current PLAN.md feature set
 
 The planner:
 - Does not re-open decisions already in DECISIONS.md
 - Does not suggest features already deferred to v0.2+
 - Writes tasks that fit the existing architecture
-- Produces:
-  - `.cli/plan/PLAN.md` — updated with new tasks in the right section
-  - `.cli/audit/GAPS.md` — convention violations found
-  - `.cli/audit/FIXES.md` — improvement list, human-readable
+- Produces: `.cli/plan/PLAN.md` updated with new tasks in the correct section
 
 Show the plan before executing:
 
