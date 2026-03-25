@@ -163,6 +163,21 @@ def main():
         with open(log_file, 'a') as f:
             f.write(json.dumps(entry) + '\n')
 
+        # Trigger auto-learning every AUTO_LEARN_EVERY sessions
+        AUTO_LEARN_EVERY = 5
+        session_files = [
+            f for f in sessions_dir.glob('*.jsonl')
+            if f.name != '.errors_buffer.jsonl'
+        ]
+        if len(session_files) > 0 and len(session_files) % AUTO_LEARN_EVERY == 0:
+            auto_learn = Path(__file__).parent / 'auto_learn.py'
+            if auto_learn.exists():
+                subprocess.Popen(
+                    [sys.executable, str(auto_learn), str(cwd)],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+
     except Exception:
         pass  # fail-silent always
 
