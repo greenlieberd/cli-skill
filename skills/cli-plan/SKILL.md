@@ -45,18 +45,39 @@ Which would you like?
 
 ---
 
-## Step 1 — Goal and context (always asked)
+## Step 1 — Goal and v0.1 scope (always asked)
 
-One message, clear and direct:
+Two questions, one message:
 
 ```
 What are we building?
 
-Describe the goal in one or two sentences — what does this CLI do, who uses it,
-and what does success look like when it's done?
+1. Describe the goal in one or two sentences — what does this CLI do,
+   who uses it, what does it produce?
+
+2. What's the smallest version that proves it works?
+   Not the full vision — just the thing you'd run tomorrow and say "yes, this is it."
 ```
 
-Wait for the answer. Use it to shape every recommendation that follows.
+Wait for both answers. Then explicitly confirm the v0.1 scope before moving on:
+
+```
+Got it. Here's what I'm treating as v0.1:
+
+  [1–3 bullet points — the core thing only]
+
+Everything else goes in "later". We can always append features — but we ship
+something working first. Does this scope feel right?
+```
+
+If the user tries to pack in too much, push back directly:
+
+```
+That's a lot for v0.1. Which 2–3 things prove the core idea works?
+The rest can be v0.2 — we'll put them in the plan so nothing gets lost.
+```
+
+Use the confirmed v0.1 scope to filter every decision in the interview that follows.
 
 ---
 
@@ -235,20 +256,32 @@ output/   — generated files (gitignored)
 > Status: 0 of [N] tasks complete
 > Planned: [date]
 > Goal: [user's stated goal]
+> v0.1 scope: [1-line summary of what ships first]
 
-## Build next
+## v0.1 — ship this
 
-- [ ] **Init project** `chore` — create folder, write package.json, run bun install, git init
-- [ ] **[task]** `feat` — [specific, one sentence]
-- [ ] **[task]** `feat` — [specific]
+Everything here must be done before this is usable. Ordered by dependency.
+Each task is specific enough to start immediately.
 
-## Later
+- [ ] **Init project** `chore` — create folder, package.json, bun install, git init
+- [ ] **ASCII art + HUD shell** `feat` — src/hud.ts with logo, menu skeleton, resize handler, ctrl+c exit
+- [ ] **[core feature]** `feat` — [specific, one sentence]
+- [ ] **[core feature]** `feat` — [specific]
+- [ ] **Tests** `test` — tests/cli.test.ts covering configure, models, at least one source or command
+- [ ] **Verify** `chore` — bun hud starts, bun test passes, ctrl+c restores cursor
 
-- [ ] **[task]** `feat` — [specific]
+## v0.2+ — append later
+
+Don't build these yet. Add them with /cli:audit after v0.1 ships.
+
+- [ ] **[feature]** `feat` — [specific]
+- [ ] **[feature]** `feat` — [specific]
 
 ## Ideas
 
-- **[idea]** — [tradeoff, not a task yet]
+Not tasks yet — discuss before committing.
+
+- **[idea]** — [tradeoff]
 ```
 
 ---
@@ -260,12 +293,14 @@ Plan written → .cli/plan/
 
   CONTEXT.md   — what this is and how it works
   DECISIONS.md — why each architecture choice was made
-  PLAN.md      — [N] tasks, ordered by dependency
+  PLAN.md      — [N] v0.1 tasks + [M] v0.2+ features parked for later
 
-First task: [task name]
-Scope: [under a day | a few days | week+]
+v0.1 is [N] tasks. Scope: [under a day | a few days].
+
+The goal is a working, testable tool — not the full vision.
+Once v0.1 ships, use /cli:audit to append features from the v0.2+ list.
 
 What's next?
-  /cli:new [name]   — build it from scratch using this plan
+  /cli:new [name]   — build v0.1 from scratch using this plan
   /cli:audit [path] — improve an existing project using this plan
 ```

@@ -98,7 +98,7 @@ Read `PLAN_COMPLETE` fields. Use this mapping:
 | `distribution` | includes `mcp` | `src/mcp.ts` |
 | `distribution` | includes `global` | `"bin": {"[name]": "src/cli.ts"}` in package.json |
 
-**Write in this order. Announce each file before writing it. No `// TODO` stubs.**
+**Write in this order. Announce each file before writing it. No `// TODO` stubs. Only build what's in the v0.1 scope.**
 
 1. `CLAUDE.md` — references `.cli/plan/CONTEXT.md`, lists `bun hud`, summarizes architecture
 2. `.gitignore` — node_modules, .env, output/, .propane/, .cache/, .fonts/
@@ -108,21 +108,40 @@ Read `PLAN_COMPLETE` fields. Use this mapping:
 6. `src/configure.ts` — copy verbatim from assets/configure.ts
 7. `src/cli.ts` — routes to hud/wizard/run, under 80 lines
 8. Interface files — read assets/ for reference, adapt for this project
-9. Source files
-10. Server + UI (if browser)
-11. MCP server (if mcp)
-12. `tests/cli.test.ts` — bun:test covering configure, models, at least one source
+9. Source files — only sources in v0.1 scope
+10. Server + UI (if browser, and in v0.1)
+11. MCP server (if mcp, and in v0.1)
+12. `tests/cli.test.ts` — **required, not optional** (see testing rules below)
 
-**HUD rules** (read `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`):
-- Adapt menu items from assets/hud.ts to this project
-- `process.stdout.on('resize', redraw)` — required
+**HUD rules** (read `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md` and `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`):
+
+Every HUD gets ASCII art. No exceptions — it's what makes it feel like a real tool.
+
+- Read `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md` — use the 6-line block letter pattern
+- Draw the tool name as a logo at the top of the home screen
+- Skip the logo if terminal < 48 cols, show the plain name instead
+- Menu items must reflect v0.1 features only — no placeholder items like "Feature coming soon"
+  - Each menu item does something real in this version
+  - If a feature is v0.2+, it is not in the menu yet
+- `process.stdout.on('resize', redraw)` — required, always
 - `Math.min(process.stdout.columns ?? 80, 66)` for all widths
-- If terminal < 50 cols, show a message instead of a broken layout
+- If terminal < 50 cols, show a readable message instead of a broken layout
 
 **Wizard rules** (read `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md`):
 - Extend assets/App.tsx with this project's actual steps
 - NEXT and PREV maps must cover every step — no dead ends
 - Every step gets exactly `onNext(value)` and `onBack()` props
+
+**Testing rules** (read `${CLAUDE_SKILL_DIR}/../../rules/testing.md`):
+
+Tests are part of v0.1, not a later task. Write them now, before the quality review.
+
+`tests/cli.test.ts` must cover:
+- `configure.ts` — `loadEnv()` loads keys, `maskValue()` masks correctly
+- `src/models.ts` — model IDs are strings, tiers exist, no hardcoded values
+- At least one source or command — test the happy path and one error path
+- Use `global.fetch = mock(...)` in `beforeEach`, restore in `afterEach`
+- Run after scaffold: `bun test` must pass before moving to quality review
 
 Commit:
 ```bash
@@ -159,20 +178,34 @@ bun test
 
 ---
 
-## Phase 7 — Ship checklist
+## Phase 7 — v0.1 ship checklist
 
-- [ ] `bun hud` starts, main screen renders
-- [ ] Arrow keys navigate, `ctrl+c` exits cleanly and restores cursor
-- [ ] ANSI HUD: resize terminal — layout adapts, no corruption
-- [ ] Wizard: Frame shows correct progress dots per step
-- [ ] At least one menu item or step does real work (not a placeholder)
-- [ ] All tests pass with `bun test`
+This is v0.1. Every item here must pass. Nothing ships broken.
+
+**Runs:**
+- [ ] `bun hud` starts without errors, main screen renders
+- [ ] Arrow keys navigate menus, `ctrl+c` exits cleanly and restores cursor
+- [ ] Resize terminal — layout adapts, no corruption (ANSI HUD)
+- [ ] Frame shows correct progress dots per step (Wizard)
+
+**Looks right:**
+- [ ] ASCII art logo renders on the home screen
+- [ ] Every menu item does something real — no placeholders, no "coming soon"
+- [ ] v0.2+ features are not in the menu yet
+
+**Tests pass:**
+- [ ] `bun test` passes with zero failures
+- [ ] configure, models, and at least one source/command are covered
+- [ ] Tests use mocked fetch — not hitting real APIs
+
+**Ships clean:**
 - [ ] `.env.example` documents every required key
 - [ ] `output/` and `.propane/` are in `.gitignore`
-- [ ] `.cli/plan/CONTEXT.md`, `.cli/plan/DECISIONS.md`, `.cli/plan/PLAN.md` exist
-- [ ] `CLAUDE.md` accurately describes the architecture
-- [ ] If browser: `bun serve` opens and status shows "connected"
-- [ ] If MCP: `src/mcp.ts` runs, `CLAUDE.md` has registration instructions
+- [ ] `.cli/plan/PLAN.md` shows v0.1 tasks and v0.2+ parked separately
+- [ ] `CLAUDE.md` accurately describes what's built
+
+**If browser:** `bun serve` opens, status shows "connected"
+**If MCP:** `src/mcp.ts` runs, `CLAUDE.md` has registration instructions
 
 ```bash
 git add -A && git commit -m "chore: ready for first run — [name]"
@@ -187,6 +220,7 @@ Tell the user: "Run `git push` when you're ready to share this."
 Read when generating the corresponding files:
 
 - HUD screen loop, resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`
+- ASCII art logo, block letters, width guard: `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`
 - Wizard steps, Frame, progress dots: `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md`
 - Colors and ANSI palette: `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
 - Display system (spinner, done/skip/fail): `${CLAUDE_SKILL_DIR}/../../rules/display-system.md`
