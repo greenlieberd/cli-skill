@@ -17,6 +17,7 @@ Read-only analysis of an existing CLI. No changes, no plans — just a clear pic
 Directory: !`pwd`
 Target path: `$ARGUMENTS`
 Files at target: !`ls "${ARGUMENTS:-.}" 2>/dev/null | head -20 || ls . | head -20`
+Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null || echo "none"`
 
 ---
 

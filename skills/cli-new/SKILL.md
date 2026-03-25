@@ -20,6 +20,7 @@ Git: !`git rev-parse --is-inside-work-tree 2>/dev/null && echo "repo" || echo "n
 Existing package.json: !`[ -f package.json ] && python3 -c 'import json; d=json.load(open("package.json")); print(d.get("name","?"))' 2>/dev/null || echo "none"`
 Rules: !`ls "${CLAUDE_SKILL_DIR}/../../rules/" 2>/dev/null`
 Assets: !`ls "${CLAUDE_SKILL_DIR}/../cli-new/assets/" 2>/dev/null || ls "${CLAUDE_SKILL_DIR}/assets/" 2>/dev/null`
+Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null || echo "none"`
 
 ---
 
