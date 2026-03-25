@@ -276,15 +276,70 @@ Run git push when you're ready.
 
 ## Rules reference
 
-Read before working on the corresponding file type:
+Read before working on the corresponding file type. Always read only what the task requires.
 
-- HUD, resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`
-- ASCII art: `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`
-- Colors: `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
-- Display system: `${CLAUDE_SKILL_DIR}/../../rules/display-system.md`
-- SourceResult: `${CLAUDE_SKILL_DIR}/../../rules/source-results.md`
-- Models: `${CLAUDE_SKILL_DIR}/../../rules/models.md`
-- Error recovery: `${CLAUDE_SKILL_DIR}/../../rules/error-recovery.md`
-- Testing: `${CLAUDE_SKILL_DIR}/../../rules/testing.md`
-- Retry: `${CLAUDE_SKILL_DIR}/../../rules/retry.md`
-- Conventions: `${CLAUDE_SKILL_DIR}/../../rules/conventions.md`
+**Foundation (always):**
+- `rules/conventions.md` — naming, patterns, non-negotiables
+- `rules/folder-structure.md` — canonical src/, cli/, output/, .propane/, .cli/ layout
+
+**HUD (interface = hud or hybrid):**
+- `rules/hud-screens.md` — screen state machine, resize, entry points
+- `rules/ascii-art.md` — logo pattern, 6-line block letters
+- `rules/alternate-screen.md` — fullscreen buffer entry/exit
+- `rules/layouts.md` — sidebar, split-pane, modal, pinned footer
+- `rules/spinners.md` — multi-phase loading indicators
+- `rules/tables.md` — tabular data, column alignment, scroll
+- `rules/tabs.md` — tab bar, ◄ ► switching, count badges
+- `rules/keyboard-shortcuts.md` — shortcut design, help overlay
+- `rules/clipboard.md` — pbcopy/pbpaste integration
+
+**Wizard (interface = wizard or hybrid):**
+- `rules/wizard-steps.md` — NEXT/PREV maps, step props, Frame
+- `rules/confirmation.md` — y/n prompts for destructive actions
+- `rules/rich-input.md` — multi-line, paste, image, stdin capture
+
+**Hybrid:**
+- `rules/hybrid-interface.md` — wiring HUD home to Ink sub-flows
+
+**Display (any interface):**
+- `rules/colors.md` — ANSI color constants, theme presets
+- `rules/display-system.md` — output formatting, alignment
+- `rules/gentle-terminal.md` — streaming, piped output, cursor
+- `rules/notifications.md` — macOS osascript alerts
+- `rules/diff-output.md` — before/after color-coded diffs
+
+**Sources:**
+- `rules/source-results.md` — SourceResult shape, never throw
+- `rules/retry.md` — backoff, max attempts, error propagation
+- `rules/caching.md` — .cache/ TTL, diff tracking, cache-first fetch
+- `rules/limits.md` — LIMITS registry, rate limits, batch sizes
+- `rules/parallelization.md` — Promise.allSettled, concurrent sources
+
+**AI:**
+- `rules/models.md` — model IDs only in models.ts, {id, maxTokens}
+- `rules/token-spend.md` — tracking usage, cost estimation per call
+- `rules/stream-to-agents.md` — stdout JSON lines, subprocess pipes
+
+**Output & Storage:**
+- `rules/flat-files.md` — .propane/ patterns, no databases
+- `rules/output-files.md` — date-stamped naming, manifest, open from HUD
+- `rules/logging.md` — JSONL usage/error logs, rotation
+
+**Infrastructure:**
+- `rules/error-recovery.md` — crash handling, process.exit()
+- `rules/testing.md` — bun:test, mock fetch, fixture cleanup
+- `rules/configuration.md` — configure.ts, loadEnv(), maskValue()
+- `rules/environment-setup.md` — .env.example, key docs
+
+**Browser:**
+- `rules/browser-views.md` — SSE, HTML UI, status display
+- `rules/file-watch.md` — Bun fs.watch → SSE → live reload
+
+**Distribution:**
+- `rules/mcp-servers.md` — stdio MCP server, Claude Desktop registration
+- `rules/global-install.md` — bin config, global command install
+- `rules/update-checker.md` — non-blocking startup version check
+
+**Ecosystem:**
+- `rules/plugin-ecosystem.md` — Claude Code plugins worth composing with
+- `rules/workspace-settings.md` — .claude/ config, skills, hooks setup

@@ -108,6 +108,8 @@ Read `PLAN_COMPLETE` fields. Use this mapping:
 | `distribution` | includes `global` | `"bin": {"[name]": "src/cli.ts"}` in package.json |
 | `theme` | any value | `src/theme.ts` — always generated, sets ACTIVE_THEME |
 
+Read `${CLAUDE_SKILL_DIR}/../../rules/folder-structure.md` before writing any file — confirms canonical src/, cli/, output/, .propane/, .cli/ layout.
+
 **Write in this order. Announce each file before writing it. No `// TODO` stubs. Only build what's in the v0.1 scope.**
 
 1. `CLAUDE.md` — references `.cli/plan/CONTEXT.md`, lists `bun hud`, summarizes architecture
@@ -123,7 +125,7 @@ Read `PLAN_COMPLETE` fields. Use this mapping:
 8. `src/cli.ts` — routes to hud/wizard/run, under 80 lines
 
 **If interface = hud or hybrid:**
-Read `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md` and `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md` before writing hud.ts.
+Read before writing hud.ts: `rules/hud-screens.md`, `rules/ascii-art.md`, `rules/alternate-screen.md`, `rules/layouts.md`, `rules/spinners.md`, `rules/tables.md`, `rules/tabs.md`, `rules/keyboard-shortcuts.md`.
 Read `${CLAUDE_SKILL_DIR}/assets/hud.ts` as the reference implementation — adapt menu items, logo, and screen names for this project.
 
 Rules for hud.ts:
@@ -133,14 +135,22 @@ Rules for hud.ts:
 - `process.stdout.on('resize', redraw)` — required, no exceptions
 - `Math.min(process.stdout.columns ?? 80, 66)` for all widths
 - If terminal < 50 cols, show a readable fallback message
+- Use `alternate-screen.md` pattern for fullscreen buffer entry/exit
+- Apply `layouts.md` for sidebar, split-pane, or footer patterns as needed
+- Use `spinners.md` for any multi-phase loading states
+- Use `tables.md` for any tabular data rendering
+- Use `tabs.md` for tab bar navigation with ◄ ► switching
+- Use `keyboard-shortcuts.md` for shortcut design and help overlay
 
 **If interface = wizard or hybrid:**
-Read `${CLAUDE_SKILL_DIR}/../../rules/wizard-steps.md` before writing cli/ files.
+Read before writing cli/ files: `rules/wizard-steps.md`, `rules/confirmation.md`, `rules/rich-input.md`, `rules/spinners.md`.
 Read `${CLAUDE_SKILL_DIR}/assets/App.tsx`, `Frame.tsx`, `SelectList.tsx` as reference — adapt steps for this project.
 
 Rules for wizard:
 - NEXT and PREV maps must cover every step — no dead ends
 - Every step gets exactly `onNext(value)` and `onBack()` props
+- Use `confirmation.md` pattern for any destructive action prompts
+- Use `rich-input.md` for multi-line input, paste, or image input steps
 - `cli/index.tsx` (no asset — write from scratch):
   ```tsx
   #!/usr/bin/env bun
@@ -150,13 +160,20 @@ Rules for wizard:
   render(React.createElement(App))
   ```
 
+**If interface = hybrid:**
+Read `${CLAUDE_SKILL_DIR}/../../rules/hybrid-interface.md` before wiring the HUD home screen to Ink wizard sub-flows.
+
 **If sources ≠ none:**
-Read `${CLAUDE_SKILL_DIR}/../../rules/source-results.md` before writing any source file.
+Read before writing source files: `rules/source-results.md`, `rules/retry.md`, `rules/caching.md`, `rules/limits.md`, `rules/parallelization.md`.
 Each source returns `SourceResult` — never throws.
+- Use `caching.md` for `.cache/` TTL pattern if source data doesn't change every run
+- Define all fetch limits in one `LIMITS` registry per `limits.md`
+- Use `parallelization.md` pattern for concurrent `Promise.allSettled` source fetches
 
 9. Source files — only sources in v0.1 scope, one file each
-10. `src/server.ts` + `ui/index.html` — if output includes browser
+10. `src/server.ts` + `ui/index.html` — if output includes browser (read `rules/file-watch.md` for SSE/live-reload)
 11. `src/mcp.ts` — if distribution includes mcp
+12. Output file helpers — if output includes reports/exports (read `rules/output-files.md` for date-stamped naming; `rules/diff-output.md` if showing before/after diffs)
 
 **Tests** (read `${CLAUDE_SKILL_DIR}/../../rules/testing.md` before writing):
 
@@ -266,17 +283,34 @@ Do not load rules speculatively. Read each rule immediately before writing the f
 
 **If ai ≠ none and ≠ piped:**
 - `${CLAUDE_SKILL_DIR}/../../rules/models.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/token-spend.md` — track usage, estimate cost per call
+- `${CLAUDE_SKILL_DIR}/../../rules/stream-to-agents.md` — if piping CLI output to Claude Code agents
 
 **If output includes browser:**
 - `${CLAUDE_SKILL_DIR}/../../rules/browser-views.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/file-watch.md` — Bun fs.watch → SSE → live reload
 
 **If distribution includes mcp:**
 - `${CLAUDE_SKILL_DIR}/../../rules/mcp-servers.md`
 
+**If distribution includes global:**
+- `${CLAUDE_SKILL_DIR}/../../rules/global-install.md` — bin config, global run from anywhere
+- `${CLAUDE_SKILL_DIR}/../../rules/update-checker.md` — non-blocking startup version check
+
 **If writing to .propane/ or output/ storage:**
 - `${CLAUDE_SKILL_DIR}/../../rules/flat-files.md`
+- `${CLAUDE_SKILL_DIR}/../../rules/output-files.md` — date-stamped naming, manifest, open from HUD
+- `${CLAUDE_SKILL_DIR}/../../rules/logging.md` — JSONL usage logs, error logs, log rotation
+
+**If output includes diffs or before/after comparison:**
+- `${CLAUDE_SKILL_DIR}/../../rules/diff-output.md`
 
 **Additional (read if working on the relevant area):**
+- `${CLAUDE_SKILL_DIR}/../../rules/folder-structure.md` — canonical layout (always read before Phase 4)
 - `${CLAUDE_SKILL_DIR}/../../rules/gentle-terminal.md` — streaming, piped output
 - `${CLAUDE_SKILL_DIR}/../../rules/error-recovery.md` — crash handling, process.exit()
 - `${CLAUDE_SKILL_DIR}/../../rules/configuration.md` — configure.ts patterns
+- `${CLAUDE_SKILL_DIR}/../../rules/notifications.md` — macOS osascript alerts
+- `${CLAUDE_SKILL_DIR}/../../rules/clipboard.md` — pbcopy/pbpaste integration in HUD
+- `${CLAUDE_SKILL_DIR}/../../rules/plugin-ecosystem.md` — composing with other Claude Code plugins
+- `${CLAUDE_SKILL_DIR}/../../rules/workspace-settings.md` — .claude/ config, skills, hooks setup
