@@ -137,7 +137,8 @@ Restart Claude Code, then:
 ### Update
 
 ```bash
-claude plugin update cli
+claude plugin marketplace update cli
+claude plugin update cli@cli
 ```
 
 ### Uninstall
