@@ -2,17 +2,16 @@
 
 A Claude Code plugin for building production-quality CLI tools with Bun, Ink, and ANSI patterns.
 
-Three skills:
-- **`/new-cli`** — plan and scaffold a new CLI from scratch, including dependency setup
-- **`/audit-cli`** — review an existing CLI and produce a prioritized `PLAN.md`
-- **`/fix-cli`** — execute tasks from a `PLAN.md` one by one, with verification
+Four skills under the `/cli:` namespace:
 
----
+| Skill | Job |
+|-------|-----|
+| **`/cli:explore`** | Understand what's in an existing CLI — read-only analysis, no changes |
+| **`/cli:plan`** | Define what to build — interview, architecture recommendation, plan files |
+| **`/cli:new`** | Build from scratch — plan → scaffold → review → verify |
+| **`/cli:audit`** | Improve what exists — explore → plan → execute → commit |
 
-## Prerequisites
-
-- [Claude Code](https://claude.ai/code) installed and running
-- [Bun](https://bun.sh) — the skill will offer to install it if missing
+Skills compose: `cli:new` runs the planner internally. `cli:audit` runs the explorer and planner internally. Run `cli:explore` or `cli:plan` standalone when you want just that phase.
 
 ---
 
@@ -23,16 +22,15 @@ git clone git@github.com:greenlieberd/cli-skill.git
 claude plugin install ./cli-skill
 ```
 
-Or from a local path (if you've already cloned it):
+Or from a local path:
 
 ```bash
 claude plugin install /path/to/cli-skill
 ```
 
-After installing, verify the skills are available:
-
+After installing:
 ```
-/new-cli
+/cli:new
 ```
 
 You should see the planning interview start.
@@ -43,68 +41,72 @@ You should see the planning interview start.
 
 ### Build a new CLI
 
-Go to the folder where you want to create the project, then:
-
 ```
-/new-cli
+/cli:new
 ```
 
 Or pass a name to skip the first question:
 
 ```
-/new-cli my-tool
+/cli:new my-tool
 ```
 
-The skill will:
-1. Check your environment (Bun, Git, existing files)
-2. Ask 8 planning questions — interface style, AI usage, APIs, output, distribution
-3. Offer to install dependencies before writing any code
-4. Scaffold the full project and run a quality review
-
-### Audit an existing CLI
+### Understand an existing CLI
 
 ```
-/audit-cli /path/to/your/cli
+/cli:explore /path/to/your/cli
 ```
 
-Or run it from the project folder:
+Read-only. Writes findings to `.cli/audit/EXPLORE.md`. Good first step before auditing or planning changes.
+
+### Plan changes or a new feature
 
 ```
-/audit-cli
+/cli:plan /path/to/your/cli
 ```
 
-The skill will:
-1. Explore the project structure using the `cli-explorer` agent
-2. Check against Propane CLI conventions
-3. Write a `PLAN.md` with prioritized tasks
+Runs a planning interview. If `.cli/audit/EXPLORE.md` exists from a prior explore, skips questions already answered by the code. Writes `.cli/plan/CONTEXT.md`, `DECISIONS.md`, `PLAN.md`.
 
-### Execute the plan
-
-After an audit, run:
+### Improve an existing CLI
 
 ```
-/fix-cli /path/to/your/cli
+/cli:audit /path/to/your/cli
 ```
 
-Or from the project folder:
+Full cycle: explores what's there → asks what you want to change → writes a plan → executes task by task with commits. Skips phases that are already done.
+
+---
+
+## The `.cli/` folder
+
+Every project gets a `.cli/` folder Claude Code reads as context:
 
 ```
-/fix-cli
+.cli/
+  plan/
+    CONTEXT.md      — what the project is, its architecture, what not to do
+    DECISIONS.md    — why each architecture choice was made
+    PLAN.md         — living task list, checked off by cli:audit
+  audit/
+    EXPLORE.md      — cli:explore findings (architecture map, patterns, gaps)
+    GAPS.md         — what's missing vs Propane conventions
+    FIXES.md        — prioritized improvement list
+  tech/
+    STACK.md        — deps, versions, entry points, bun scripts
 ```
-
-The skill reads `PLAN.md`, implements one task at a time, runs verification checks, and marks items complete.
 
 ---
 
 ## What gets scaffolded
 
-Depending on your answers, the project includes:
+`/cli:new` generates files based on your planning answers:
 
-| Feature | Files generated |
-|---------|----------------|
-| Always | `src/cli.ts`, `src/models.ts`, `src/configure.ts`, `PLAN.md`, `CLAUDE.md`, `.gitignore`, `.env.example` |
-| Dashboard UI | `src/hud.ts` — ANSI screen loop with ASCII art, spinner, arrow-key navigation |
+| Feature | Files |
+|---------|-------|
+| Always | `src/cli.ts`, `src/configure.ts`, `CLAUDE.md`, `.gitignore`, `.env.example` |
+| Dashboard UI | `src/hud.ts` — ANSI screen loop with spinner, resize handling, arrow-key nav |
 | Wizard UI | `cli/App.tsx`, `cli/components/Frame.tsx`, `SelectList.tsx`, `TextInput.tsx` |
+| AI usage | `src/models.ts` — model tiers, never hardcoded elsewhere |
 | External APIs | `src/sources/types.ts` + one stub per API — all return `SourceResult`, never throw |
 | Browser view | `src/server.ts` + `ui/index.html` — Bun.serve with SSE, dark theme, monospace |
 | MCP server | `src/mcp.ts` — queryable from Claude Desktop |
@@ -114,49 +116,55 @@ Depending on your answers, the project includes:
 
 ## Conventions enforced
 
-This plugin encodes patterns from real Propane CLIs (animations, images, pulse, byline, battlecards):
+Patterns from real Propane CLIs (animations, images, pulse, byline, battlecards):
 
-- **`src/models.ts`** — all model IDs in one place. Never hardcoded anywhere else.
-- **`SourceResult`** — every external data fetch returns this type. Never throws.
+- **`src/models.ts`** — all model IDs here. Never hardcoded anywhere else.
+- **`SourceResult`** — every external fetch returns this type. Never throws.
 - **No databases** — flat files only. Claude is the query layer.
-- **`bun hud`** — always the entry command, regardless of interface style.
+- **`bun hud`** — always the entry command.
+- **`process.stdout.on('resize', redraw)`** — required in every ANSI HUD.
 - **`.propane/`** — runtime state (gitignored). `output/` — generated files (gitignored).
 
 A pre-tool-use hook warns when generated code violates these conventions.
 
 ---
 
+## Works with CLI-Anything
+
+[CLI-Anything](https://github.com/HKUDS/CLI-Anything) wraps any GUI or API in a CLI harness (Python Click, JSON output, REPL). This plugin makes that CLI look and feel right — ANSI HUD, Ink wizard, source patterns, model tiers.
+
+Typical flow:
+1. `CLI-Anything` — generate the API wrapper
+2. `/cli:new` or `/cli:audit` — design the UX layer on top
+
+---
+
 ## Project structure
 
 ```
-.claude-plugin/plugin.json
+.claude-plugin/
+  plugin.json           — plugin registration (name: cli)
+  marketplace.json      — marketplace entry
 
 skills/
-  new-cli/SKILL.md          — /new-cli: plan + scaffold
-    assets/                 — copy-paste reference files
-      hud.ts                  complete ANSI HUD with spinner, resize handling
-      App.tsx                 Ink wizard state machine
-      Frame.tsx               progress dots + border
-      SelectList.tsx          single + multi-select
-      sources/types.ts        SourceResult interface + helpers
-      models.ts               model tier setup
-      configure.ts            loadEnv + maskValue (copy verbatim)
-      package.json            annotated deps
-  audit-cli/SKILL.md        — /audit-cli: review → .cli/ folder
-  fix-cli/SKILL.md          — /fix-cli: execute plan items with commits
+  cli-explore/SKILL.md  — /cli:explore: read-only analysis
+  cli-plan/SKILL.md     — /cli:plan: planning interview
+  cli-new/SKILL.md      — /cli:new: plan + scaffold + verify
+    assets/             — reference files (hud.ts, App.tsx, models.ts, etc.)
+  cli-audit/SKILL.md    — /cli:audit: explore + plan + execute
 
 agents/
-  cli-planner.md            — goal-driven planning interview → .cli/ folder
-  cli-explorer.md           — read-only analysis of existing CLIs
-  cli-architect.md          — architecture blueprint (minimal vs modular)
-  cli-reviewer.md           — code review (correctness / completeness / conventions)
+  cli-planner.md        — goal-driven planning interview
+  cli-explorer.md       — read-only codebase analysis
+  cli-architect.md      — architecture blueprint
+  cli-reviewer.md       — correctness + conventions review
 
-rules/                      — 42 subject-named rules (colors, retry, testing, tables, etc.)
+rules/                  — 42 subject-named rules (colors, retry, testing, tables, etc.)
 
 hooks/
-  hooks.json                — convention check (scoped to CLI projects)
-  check_conventions.py      — warns on model IDs, throwing sources, DB imports
-  load_context.sh           — scoped session reminder
+  hooks.json            — convention check (scoped to CLI projects)
+  check_conventions.py  — warns on model IDs, throwing sources, DB imports
+  load_context.sh       — scoped session reminder
 ```
 
 ---
@@ -164,7 +172,7 @@ hooks/
 ## Uninstall
 
 ```bash
-claude plugin uninstall propane-cli-skill
+claude plugin uninstall cli
 ```
 
 ---

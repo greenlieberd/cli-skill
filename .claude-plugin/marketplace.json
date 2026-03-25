@@ -1,0 +1,20 @@
+{
+  "name": "cli",
+  "owner": {
+    "name": "Propane"
+  },
+  "metadata": {
+    "description": "UX-first CLI builder for Bun/Ink/ANSI — plan, scaffold, explore, and audit production CLIs. Encodes patterns from real Propane tools."
+  },
+  "plugins": [
+    {
+      "name": "cli",
+      "source": "./",
+      "description": "Four skills for designing and building production CLIs: /cli:new, /cli:plan, /cli:explore, /cli:audit.",
+      "author": {
+        "name": "Propane"
+      },
+      "category": "development"
+    }
+  ]
+}

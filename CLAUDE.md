@@ -9,35 +9,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Structure
 
 ```
-.claude-plugin/plugin.json
+.claude-plugin/
+  plugin.json           — plugin registration (name: cli → /cli:* commands)
+  marketplace.json      — marketplace entry
 
 skills/
-  new-cli/SKILL.md          — /new-cli: plan then scaffold a new CLI
-    assets/                 — copy-paste reference files (hud.ts, App.tsx, Frame.tsx, etc.)
-  audit-cli/SKILL.md        — /audit-cli: review existing CLI → .cli/ folder
-  fix-cli/SKILL.md          — /fix-cli: execute .cli/PLAN.md one task at a time with commits
+  cli-explore/SKILL.md  — /cli:explore: read-only analysis of existing CLIs
+  cli-plan/SKILL.md     — /cli:plan: planning interview → .cli/plan/ folder
+  cli-new/SKILL.md      — /cli:new: plan + scaffold + verify
+    assets/             — copy-paste reference files (hud.ts, App.tsx, Frame.tsx, etc.)
+  cli-audit/SKILL.md    — /cli:audit: explore + plan + execute (replaces audit-cli + fix-cli)
 
 agents/
-  cli-planner.md            — goal-driven planning interview → .cli/ folder
-  cli-explorer.md           — read-only analysis of existing CLIs
-  cli-architect.md          — architecture design (minimal vs modular)
-  cli-reviewer.md           — code review (correctness / completeness / conventions)
+  cli-planner.md        — goal-driven planning interview → .cli/plan/ folder
+  cli-explorer.md       — read-only analysis of existing CLIs
+  cli-architect.md      — architecture design (minimal vs modular)
+  cli-reviewer.md       — code review (correctness / completeness / conventions)
 
-rules/                      — 42 subject-named rules with frontmatter + prerequisites
+rules/                  — 42 subject-named rules with frontmatter + prerequisites
   (see full list below)
 
 hooks/
-  hooks.json                — convention check (scoped to CLI projects) + session reminder
-  check_conventions.py      — warns on hardcoded model IDs, throwing sources, DB imports
-  load_context.sh           — session reminder, only fires in CLI projects
+  hooks.json            — convention check (scoped to CLI projects) + session reminder
+  check_conventions.py  — warns on hardcoded model IDs, throwing sources, DB imports
+  load_context.sh       — session reminder, only fires in CLI projects
 ```
 
 ## The .cli/ folder convention
 
-Every generated project gets a `.cli/` folder that Claude Code reads as context:
-- `CONTEXT.md` — what the project is, its architecture, and what not to do
-- `DECISIONS.md` — why each architecture choice was made
-- `PLAN.md` — living task list that `/fix-cli` reads and checks off
+Every project gets a `.cli/` folder Claude Code reads as context:
+```
+.cli/
+  plan/
+    CONTEXT.md      — what the project is, architecture, what not to do
+    DECISIONS.md    — why each architecture choice was made
+    PLAN.md         — living task list, checked off by /cli:audit
+  audit/
+    EXPLORE.md      — cli:explore findings (architecture map, gaps)
+    GAPS.md         — what's missing vs Propane conventions
+    FIXES.md        — prioritized improvement list
+  tech/
+    STACK.md        — deps, versions, entry points, bun scripts
+```
 
 ## Working here
 
