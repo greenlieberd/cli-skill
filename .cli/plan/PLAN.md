@@ -1,6 +1,6 @@
 # PLAN — cli-skill plugin
 
-> Status: 20 of 22 tasks complete
+> Status: 21 of 22 tasks complete
 > Started: 2026-03-25
 > Goal: Distributable Claude Code plugin for building production-quality CLI tools with great UX
 > v0.1 scope: 5 skills, 5 agents, 42 rules, hook system, lean context loading
@@ -34,7 +34,7 @@
 
 - [x] **Test bed** `test` — tests/ directory: Python unit tests for hooks, fixture projects, shell runner, REPORT.md generator (140/140 tests passing)
 - [x] **Token spend logging** `feat` — session_logger.py: log input/output/cache tokens + estimated USD cost per session
-- [ ] **Validator clean pass** `fix` — apply all plugin-dev:plugin-validator and skill-reviewer recommendations (validators running)
+- [x] **Validator clean pass** `fix` — apply all plugin-dev:plugin-validator and skill-reviewer recommendations (validators running)
 - [ ] **Rule coverage** `docs` — 25 of 42 rules are not explicitly referenced in skill files; add explicit references or archive unused ones
 
 ---
