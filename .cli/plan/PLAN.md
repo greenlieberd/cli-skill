@@ -51,10 +51,13 @@
 
 ## v0.4 — parked
 
-- [ ] **Health review skill** — scan a CLI project for what's working vs. not, produce improvement roadmap (not a numeric score — a structured review → PLAN.md)
-- [ ] **Plugin update checker** — SessionStart warns if installed version is behind marketplace
-- [ ] **Multi-project learnings** — aggregate patterns across projects, not just per-project
-- [ ] **Integration tests** — Claude API calls to verify agents produce expected output shapes (needs API key, separate from CI)
+Build in this order:
+
+- [ ] **Plugin update checker** `feat` — non-blocking SessionStart notice: version diff + one-line what's-new from CHANGELOG + exact update command in a small bordered box
+- [ ] **Audit redesign** `refactor` — `/cli:audit` becomes strategic+retrospective: loads everything (logs, learnings, plan, code), spawns architect+reviewer mindset, proposes multiple directions with trade-offs, user picks one, produces PLAN.md; SessionStart suggests audit after N sessions or returning to old project
+- [ ] **Auto-learning compression** `feat` — no reflect skill; runs automatically after N sessions; compresses global `~/.cli/learnings/SUMMARY.md` (frequency-promotes-silence-fades, stays tight); injects passively into SessionStart; invisible to user
+- [ ] **Integration tests** `test` — contract/schema validation via `claude` subprocess (no API key); checks: PLAN.md structure, folder layout, CONTEXT.md required fields, rule references match plan decisions, agent output contracts; lives in `tests/integration/`
+- [ ] **Repo dev environment** `chore` — `.claude/settings.json` with auto-hooks: plugin-validator on plugin.json/SKILL.md save, test suite on hook script save; one contributor rule file; solo-contributor scale, nothing more
 
 ---
 

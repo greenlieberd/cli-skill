@@ -36,3 +36,25 @@ Since skills run inside Claude Code runtime, full end-to-end skill testing isn't
 3. Fixture-based convention checking (known-good and known-bad files)
 4. Token estimation (static analysis of file sizes)
 Integration tests that call Claude API are in tests/integration/ and are run separately.
+
+---
+
+## v0.4 decisions — 2026-03-25
+
+## Audit: stays /cli:audit, behavior becomes strategic
+Considered creating a separate /cli:health skill. Decided against it — same name, different mode. The skill already has modes (A-F). Adding a strategic/retrospective mode is cleaner than splitting into two commands. The new behavior: load everything first (logs, learnings, plan, code via explorer), spawn architect + reviewer mindset, propose multiple directions with trade-offs. User picks a direction, PLAN.md comes out.
+
+## Audit: proactive SessionStart suggestion
+SessionStart hook will count sessions logged in .cli/sessions/ and suggest running audit after N sessions, or when returning to a project that hasn't been touched recently. Not a blocker — a quiet suggestion. Addresses the problem of people working reactively (fix this one thing) when they should step back.
+
+## Auto-learning: no reflect skill, fully automatic
+Considered a /cli:reflect command the user runs intentionally. Rejected — nobody runs introspective commands consistently. Auto-learning runs after N sessions without user action. Compression uses frequency-promotes-silence-fades: patterns appearing across multiple projects survive, one-offs fade. Global SUMMARY.md stays under ~30 lines by design — token cost is the forcing function for good compression.
+
+## Auto-learning: passive SessionStart injection (global)
+Per-project learnings already inject into SessionStart. Global ~/.cli/learnings/ (cross-project patterns) will also inject passively — top patterns only, not the full file. The user never has to think about it; it just makes every session smarter.
+
+## Integration tests: claude subprocess, not API key
+Contributors already have Claude Code installed to use the plugin. Running tests via `claude --print` subprocess means no separate API key setup. Tests verify contracts and schemas, not quality — PLAN.md has the right sections, folder structure matches the plan, rule references match plan decisions, agent output has required fields. This is what makes the system trustworthy for open source contributors.
+
+## Repo dev environment: solo contributor scale
+Currently alpha, mostly one maintainer. .claude/settings.json with two auto-hooks only: plugin-validator on plugin.json/SKILL.md edits, test suite on hook script edits. One contributor rule file for repo conventions. Not CI/CD, not enforcement — just the two most common mistakes a solo maintainer makes (forgot to validate, forgot to run tests).
