@@ -1,0 +1,17 @@
+{
+  "description": "cli-skill contributor automation. Runs validation and tests on saves — solo contributor scale.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c '\nFILE=$(echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get(\\\"file_path\\\", d.get(\\\"path\\\", \\\"\\\")))\" 2>/dev/null || echo \"\")\n\n# Validate plugin.json or SKILL.md on save\nif echo \"$FILE\" | grep -qE \"(plugin\\.json|SKILL\\.md)$\"; then\n  echo \"[dev] plugin file saved — run /plugin-dev:plugin-validator to validate\" >&2\nfi\n\n# Run unit tests when a hook script is saved\nif echo \"$FILE\" | grep -qE \"hooks/.*\\.py$\"; then\n  python3 -m pytest tests/unit/ -q 2>&1 | tail -3 >&2 || true\nfi\n\necho \"{\\\"continue\\\":true}\"\n'",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
