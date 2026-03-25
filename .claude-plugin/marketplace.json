@@ -16,7 +16,7 @@
       "name": "cli",
       "source": "./",
       "description": "Five skills for designing, scaffolding, auditing, and improving terminal tools. Treats the CLI as a design surface — not just a script runner.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "Propane"
       },

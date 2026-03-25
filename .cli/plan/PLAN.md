@@ -1,61 +1,66 @@
 # PLAN — cli-skill plugin
 
-> Status: 22 of 22 tasks complete — v0.2 shipped ✓
-> Started: 2026-03-25
+> Status: v0.3 in progress
+> Started: 2026-03-24
 > Goal: Distributable Claude Code plugin for building production-quality CLI tools with great UX
-> v0.1 scope: 5 skills, 5 agents, 42 rules, hook system, lean context loading
 
 ---
 
 ## v0.1 — shipped ✓
 
-- [x] **5 skills** `feat` — cli-new, cli-plan, cli-explore, cli-audit, cli-learn
-- [x] **5 agents** `feat` — cli-planner, cli-explorer, cli-architect, cli-reviewer, cli-learner
-- [x] **42 rules** `feat` — subject-named rules covering all major CLI patterns
-- [x] **Hook system** `feat` — check_conventions.py (PreToolUse), error_capture.py (PostToolUse), session_logger.py (Stop), SessionStart context inject
-- [x] **Asset library** `feat` — hud.ts, theme.ts, models.ts, configure.ts, App.tsx, Frame.tsx in skills/cli-new/assets/
-- [x] **Plugin registration** `chore` — plugin.json + marketplace.json
-- [x] **Wizard interview** `feat` — cli-planner redesigned as 5-step wizard with [●●●○○] progress
-- [x] **Conditional rule loading** `refactor` — rules loaded by interface type, not all 17 at once
-- [x] **Conditional asset loading** `refactor` — assets loaded based on PLAN_COMPLETE interface field
-- [x] **Model tier strategy** `fix` — haiku for read/extract, sonnet for decisions/planning
-- [x] **SessionStart tightened** `fix` — triggers on .cli/ folder presence only, not any hud project
-- [x] **Skill naming** `fix` — cli-new, cli-plan, etc. (discoverable in slash command picker)
-- [x] **Plan path fix** `fix` — all files write to .cli/plan/ not .cli/ root
-- [x] **CONTRIBUTING.md** `docs` — contributing guide with required tool workflow
-- [x] **README.md** `docs` — full story: why CLI UX matters, system cycle, install/update/uninstall
-- [x] **LICENSE** `docs` — MIT, Dennis Green-Lieber / Propane
-- [x] **CLAUDE.md** `docs` — plugin context for future sessions
-- [x] **.cli/plan/** `chore` — plugin's own planning docs (this file)
+- [x] **5 skills** — cli-new, cli-plan, cli-explore, cli-audit, cli-learn
+- [x] **5 agents** — cli-planner, cli-explorer, cli-architect, cli-reviewer, cli-learner
+- [x] **42 rules** — subject-named rules covering all major CLI patterns
+- [x] **Hook system** — check_conventions.py, error_capture.py, session_logger.py, SessionStart
+- [x] **Asset library** — hud.ts, theme.ts, models.ts, configure.ts, App.tsx, Frame.tsx
+- [x] **Plugin registration** — plugin.json + marketplace.json
+- [x] **Wizard interview** — 5-step planner with [●●●○○] progress
+- [x] **Conditional rule loading** — rules by interface type, not all at once
+- [x] **Conditional asset loading** — assets based on PLAN_COMPLETE interface field
+- [x] **Model tier strategy** — haiku for read/extract, sonnet for decisions
+- [x] **SessionStart tightened** — triggers on .cli/ folder only
+- [x] **Skill naming** — cli-new, cli-plan, etc. (discoverable in picker)
+- [x] **Plan path fix** — all files write to .cli/plan/ not .cli/ root
+- [x] **CONTRIBUTING.md** — contributing guide with required tool workflow
+- [x] **README.md** — install, system overview, conventions
+- [x] **LICENSE** — MIT, Dennis Green-Lieber / Propane
+- [x] **CLAUDE.md** — plugin context for future sessions
+- [x] **.cli/plan/** — plugin's own planning docs
 
 ---
 
-## v0.2 — in progress
+## v0.2 — shipped ✓
 
-- [x] **Test bed** `test` — tests/ directory: Python unit tests for hooks, fixture projects, shell runner, REPORT.md generator (140/140 tests passing)
-- [x] **Token spend logging** `feat` — session_logger.py: log input/output/cache tokens + estimated USD cost per session
-- [x] **Validator clean pass** `fix` — apply all plugin-dev:plugin-validator and skill-reviewer recommendations (validators running)
-- [x] **Rule coverage** `docs` — all 42 rules referenced; 25 orphans wired into conditional groups in cli-new + full taxonomy in cli-audit
+- [x] **Test bed** — 56 unit tests for hooks, fixture projects, shell runner, REPORT.md
+- [x] **Token spend logging** — session_logger.py logs input/output/cache tokens + USD cost
+- [x] **Validator clean pass** — plugin-validator + skill-reviewer recommendations applied
+- [x] **Rule coverage** — all 42 rules wired into conditional groups in cli-new + full taxonomy in cli-audit
 
 ---
 
-## v0.3 — parked
+## v0.3 — shipped ✓
 
-Use `/cli:cli-audit .` to add these when v0.2 ships.
+- [x] **CHANGELOG.md** — version history from v0.1 through v0.3
+- [x] **GALLERY.md** — design gallery with ASCII renders of HUD, wizard, tabs, tables, loading states
+- [x] **README before/after** — boring console.log output vs full designed HUD
+- [x] **Marketing rewrite** — founder voice, product positioning, "design studio" framing
+- [x] **Version bump to 0.3.0** — plugin.json, marketplace.json
+- [ ] **Deployment tests** — structural + CI-safe tests for open source contributors
 
-- [ ] **Integration tests** `test` — Claude API calls to verify agents produce expected output shapes (needs API key, runs separately)
-- [ ] **cli:stats skill** `feat` — reads .cli/sessions/ to show token spend, cost estimates, task velocity across sessions
-- [ ] **Changelog** `docs` — CHANGELOG.md tracking version history
-- [ ] **Plugin update checker** `feat` — SessionStart warns if installed version is behind marketplace
-- [ ] **Rule triage** `chore` — decide which of the 25 orphaned rules to archive vs. reference explicitly
+---
+
+## v0.4 — parked
+
+- [ ] **Health review skill** — scan a CLI project for what's working vs. not, produce improvement roadmap (not a numeric score — a structured review → PLAN.md)
+- [ ] **Plugin update checker** — SessionStart warns if installed version is behind marketplace
+- [ ] **Multi-project learnings** — aggregate patterns across projects, not just per-project
+- [ ] **Integration tests** — Claude API calls to verify agents produce expected output shapes (needs API key, separate from CI)
 
 ---
 
 ## Ideas
 
-Not tasks yet — needs discussion.
+Not tasks yet.
 
-- **cli:share** — generate a shareable project brief from .cli/plan/ (for onboarding new team members)
-- **cli:migrate** — migrate existing Propane CLI projects (pulse, animations, images) to use .cli/ convention
-- **Multi-project learnings** — aggregate patterns across projects, not just per-project
-- **Audit score** — convention compliance score (0-100) tracked over time
+- **cli:migrate** — bring existing CLIs (pulse, animations, images) into the .cli/ convention
+- **Audit score** — convention compliance tracked over time

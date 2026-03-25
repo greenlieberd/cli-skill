@@ -1,7 +1,7 @@
 {
   "name": "cli",
   "description": "Build CLIs worth running every morning. UX-first design system for the terminal — plan the experience, scaffold it exactly, improve it session by session with memory that compounds.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "Propane",
     "email": "team@usepropane.ai"
