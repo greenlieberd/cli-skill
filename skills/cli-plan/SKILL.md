@@ -1,5 +1,5 @@
 ---
-name: plan
+name: cli-plan
 description: This skill should be used when the user wants to define what to build before writing any code, for either a new CLI or an improvement to an existing one. Triggers on "plan a CLI", "let's spec this out first", "I want to redesign X", "map out what needs to change", "before we write any code", or any request to think through architecture and scope before acting. Outputs CONTEXT.md, DECISIONS.md, and PLAN.md in .cli/plan/.
 argument-hint: "[project-name or path/to/existing-cli]"
 model: sonnet

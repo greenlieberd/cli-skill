@@ -1,5 +1,5 @@
 ---
-name: new
+name: cli-new
 description: This skill should be used when building a new CLI tool from scratch. Triggers on "build a new CLI", "create a CLI", "I need a terminal tool for X", "scaffold a new Bun tool", "start a new project that runs in the terminal", or any request to build something that does not exist yet. Runs a planning interview, then scaffolds the full project in one session.
 argument-hint: "[project-name]"
 model: sonnet

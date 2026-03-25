@@ -44,7 +44,7 @@ These aren't opinions. They're patterns extracted from real production tools —
 
 ### It starts with a plan
 
-Before any code gets written, `/cli:plan` interviews you. Not a form — a conversation. It asks what you're building, who uses it, what "done" looks like for v0.1. It asks whether this is a tool you run and leave, or a tool you run and walk away from. It asks about APIs, output formats, how people will install it.
+Before any code gets written, `/cli:cli-plan` interviews you. Not a form — a conversation. It asks what you're building, who uses it, what "done" looks like for v0.1. It asks whether this is a tool you run and leave, or a tool you run and walk away from. It asks about APIs, output formats, how people will install it.
 
 From that conversation it makes architecture recommendations and shows them back to you in a table before touching anything. You confirm, you change what's wrong, and only then does it write the plan.
 
@@ -58,13 +58,13 @@ These files aren't docs you write once and forget. They're the project's memory.
 
 ### It scaffolds exactly what the plan says
 
-`/cli:new` takes the plan and builds from it. Nothing gets added that isn't in the v0.1 scope. Every file gets announced before it's written. The ASCII logo gets drawn from the tool's name. The theme is set from the five color presets you chose during planning. The menu items are real — no placeholders, no "coming soon."
+`/cli:cli-new` takes the plan and builds from it. Nothing gets added that isn't in the v0.1 scope. Every file gets announced before it's written. The ASCII logo gets drawn from the tool's name. The theme is set from the five color presets you chose during planning. The menu items are real — no placeholders, no "coming soon."
 
 Tests are part of v0.1, not a later task. The scaffold doesn't finish until `bun test` passes.
 
 ### It audits and improves
 
-`/cli:audit` is how you work on an existing CLI. It loads all the context from `.cli/` first — the plan, the decisions, the learnings from past sessions — so it knows what was already decided and why. Then it maps what's actually in the code against what the plan said should be there.
+`/cli:cli-audit` is how you work on an existing CLI. It loads all the context from `.cli/` first — the plan, the decisions, the learnings from past sessions — so it knows what was already decided and why. Then it maps what's actually in the code against what the plan said should be there.
 
 It can fix convention violations (hardcoded model IDs, sources that throw instead of returning), add a feature from the v0.2+ list, manage the feature set (move things in, move things out, scope down), or run a full audit and let the findings decide what to do.
 
@@ -74,7 +74,7 @@ Every task runs with a confirm step, a commit, and a check-off in the plan befor
 
 This is the part that compounds.
 
-Every session gets logged to `.cli/sessions/` — what ran, what broke, what changed. After a few sessions, `/cli:learn` reads those logs and distills them into project memory: patterns that work for this specific project, things to watch out for, decisions that were already made and shouldn't be reopened.
+Every session gets logged to `.cli/sessions/` — what ran, what broke, what changed. After a few sessions, `/cli:cli-learn` reads those logs and distills them into project memory: patterns that work for this specific project, things to watch out for, decisions that were already made and shouldn't be reopened.
 
 That memory lives in `.cli/learnings/SUMMARY.md`. Every future session starts by reading it. Claude comes in knowing the project's history — the gotchas, the preferences, the choices that were already debated. You don't re-explain the same things. The tool gets better at understanding your project the longer you work on it.
 
@@ -111,13 +111,13 @@ The split matters: plan, audit, and learnings travel with the repo — the whole
 
 | Skill | What it does |
 |-------|-------------|
-| **`/cli:new`** | Full build cycle: interview → plan → scaffold → review → verify → ship checklist |
-| **`/cli:plan`** | Just the planning phase — use when you want to think before building |
-| **`/cli:explore`** | Read-only analysis of an existing CLI — architecture map, gap report, 5 files to read first |
-| **`/cli:audit`** | Improve what exists — loads all context, explores, plans, executes task by task with commits |
-| **`/cli:learn`** | Reads session logs, distills patterns into project memory for future sessions |
+| **`/cli:cli-new`** | Full build cycle: interview → plan → scaffold → review → verify → ship checklist |
+| **`/cli:cli-plan`** | Just the planning phase — use when you want to think before building |
+| **`/cli:cli-explore`** | Read-only analysis of an existing CLI — architecture map, gap report, 5 files to read first |
+| **`/cli:cli-audit`** | Improve what exists — loads all context, explores, plans, executes task by task with commits |
+| **`/cli:cli-learn`** | Reads session logs, distills patterns into project memory for future sessions |
 
-Skills compose. `/cli:new` runs the planner internally. `/cli:audit` runs the explorer and planner. Run any skill standalone when you want just that phase.
+Skills compose. `/cli:cli-new` runs the planner internally. `/cli:cli-audit` runs the explorer and planner. Run any skill standalone when you want just that phase.
 
 ---
 
@@ -131,7 +131,7 @@ claude plugin install cli@cli
 Restart Claude Code, then:
 
 ```
-/cli:new
+/cli:cli-new
 ```
 
 ### Update
@@ -151,7 +151,7 @@ claude plugin marketplace remove cli
 
 ## What gets scaffolded
 
-`/cli:new` generates files based on your planning answers — only what's in v0.1 scope:
+`/cli:cli-new` generates files based on your planning answers — only what's in v0.1 scope:
 
 | Piece | Files |
 |-------|-------|
@@ -188,7 +188,7 @@ A pre-tool-use hook watches for violations as Claude writes code:
 
 ```
 CLI-Anything → generates the wrapper
-/cli:audit   → designs the UX layer on top
+/cli:cli-audit→ designs the UX layer on top
 ```
 
 ---
@@ -201,12 +201,12 @@ CLI-Anything → generates the wrapper
   marketplace.json      — marketplace entry
 
 skills/
-  cli-new/SKILL.md      — /cli:new: plan + scaffold + verify
+  cli-new/SKILL.md      — /cli:cli-new: plan + scaffold + verify
     assets/             — reference files: hud.ts, theme.ts, models.ts, App.tsx, Frame.tsx
-  cli-plan/SKILL.md     — /cli:plan: thin wrapper → cli-planner agent
-  cli-explore/SKILL.md  — /cli:explore: read-only analysis
-  cli-audit/SKILL.md    — /cli:audit: full improvement cycle
-  cli-learn/SKILL.md    — /cli:learn: session logs → project memory
+  cli-plan/SKILL.md     — /cli:cli-plan: thin wrapper → cli-planner agent
+  cli-explore/SKILL.md  — /cli:cli-explore: read-only analysis
+  cli-audit/SKILL.md    — /cli:cli-audit: full improvement cycle
+  cli-learn/SKILL.md    — /cli:cli-learn: session logs → project memory
 
 agents/
   cli-planner.md        — goal-driven planning interview → .cli/plan/
