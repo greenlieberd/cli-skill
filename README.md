@@ -2,7 +2,7 @@
 
 A Claude Code plugin for building production-quality CLI tools with Bun, Ink, and ANSI patterns.
 
-Four skills under the `/cli:` namespace:
+Five skills under the `/cli:` namespace:
 
 | Skill | Job |
 |-------|-----|
@@ -10,6 +10,7 @@ Four skills under the `/cli:` namespace:
 | **`/cli:plan`** | Define what to build — interview, architecture recommendation, plan files |
 | **`/cli:new`** | Build from scratch — plan → scaffold → review → verify |
 | **`/cli:audit`** | Improve what exists — explore → plan → execute → commit |
+| **`/cli:learn`** | Extract session patterns into project memory — runs after a few sessions |
 
 Skills compose: `cli:new` runs the planner internally. `cli:audit` runs the explorer and planner internally. Run `cli:explore` or `cli:plan` standalone when you want just that phase.
 
@@ -19,21 +20,35 @@ Skills compose: `cli:new` runs the planner internally. `cli:audit` runs the expl
 
 ```bash
 git clone git@github.com:greenlieberd/cli-skill.git
-claude plugin install ./cli-skill
 ```
 
-Or from a local path:
+Then register it as a local marketplace and install:
 
 ```bash
-claude plugin install /path/to/cli-skill
+claude plugin marketplace add ./cli-skill
+claude plugin install cli@cli
 ```
 
-After installing:
+After installing, restart Claude Code. Then:
 ```
 /cli:new
 ```
 
 You should see the planning interview start.
+
+### Update
+
+```bash
+cd cli-skill && git pull
+claude plugin update cli
+```
+
+### Uninstall
+
+```bash
+claude plugin uninstall cli
+claude plugin marketplace remove cli
+```
 
 ---
 
@@ -152,27 +167,22 @@ skills/
   cli-new/SKILL.md      — /cli:new: plan + scaffold + verify
     assets/             — reference files (hud.ts, App.tsx, models.ts, etc.)
   cli-audit/SKILL.md    — /cli:audit: explore + plan + execute
+  cli-learn/SKILL.md    — /cli:learn: extract session patterns → project memory
 
 agents/
   cli-planner.md        — goal-driven planning interview
   cli-explorer.md       — read-only codebase analysis
   cli-architect.md      — architecture blueprint
   cli-reviewer.md       — correctness + conventions review
+  cli-learner.md        — session log → project memory distillation
 
 rules/                  — 42 subject-named rules (colors, retry, testing, tables, etc.)
 
 hooks/
-  hooks.json            — convention check (scoped to CLI projects)
+  hooks.json            — PreToolUse conventions + PostToolUse error capture + Stop logger + SessionStart context
   check_conventions.py  — warns on model IDs, throwing sources, DB imports
-  load_context.sh       — scoped session reminder
-```
-
----
-
-## Uninstall
-
-```bash
-claude plugin uninstall cli
+  error_capture.py      — buffers bash errors for session learning
+  session_logger.py     — writes session summary to .cli/sessions/
 ```
 
 ---

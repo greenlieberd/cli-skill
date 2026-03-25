@@ -10,7 +10,8 @@
     {
       "name": "cli",
       "source": "./",
-      "description": "Four skills for designing and building production CLIs: /cli:new, /cli:plan, /cli:explore, /cli:audit.",
+      "description": "Five skills for designing and building production CLIs: /cli:new, /cli:plan, /cli:explore, /cli:audit, /cli:learn.",
+      "version": "3.0.0",
       "author": {
         "name": "Propane"
       },

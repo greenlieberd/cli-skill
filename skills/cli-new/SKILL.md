@@ -1,6 +1,6 @@
 ---
 name: new
-description: Use this skill when the user wants to build a new CLI tool from scratch. Triggers on "build a new CLI", "create a CLI", "I need a terminal tool for X", "start a CLI project", "scaffold a new Bun tool", or any request to build something that doesn't exist yet. Pass a project name to skip the first question. Runs a planning interview first, then scaffolds the full project.
+description: This skill should be used when building a new CLI tool from scratch. Triggers on "build a new CLI", "create a CLI", "I need a terminal tool for X", "scaffold a new Bun tool", "start a new project that runs in the terminal", or any request to build something that does not exist yet. Runs a planning interview, then scaffolds the full project in one session.
 argument-hint: "[project-name]"
 model: sonnet
 effort: high
@@ -37,12 +37,23 @@ Check before anything else:
 
 ## Phase 2 — Plan
 
-Launch `cli-planner` agent. Pass:
+**If `.cli/plan/PLAN.md` already exists** (user ran `/cli:plan` first):
+```
+A plan already exists at .cli/plan/PLAN.md.
+
+  A) Use this plan — skip the interview, go straight to scaffold
+  B) Re-plan from scratch
+
+Which would you like?
+```
+On A: read PLAN_COMPLETE fields from the existing plan files and jump to Phase 3.
+
+**If no plan exists:** launch `cli-planner` agent. Pass:
 - The goal or name from `$ARGUMENTS`
 - Any `cli-explorer` findings (if extending)
 - Current directory
 
-The planner runs the same interview as `cli:plan` — interface, AI usage, sources, output, distribution — then writes:
+The planner interviews the user (goal, v0.1 scope, interface, AI, sources, output, distribution, theme) then writes:
 - `.cli/plan/CONTEXT.md`
 - `.cli/plan/DECISIONS.md`
 - `.cli/plan/PLAN.md`
@@ -97,21 +108,24 @@ Read `PLAN_COMPLETE` fields. Use this mapping:
 | `output` | includes `browser` | `src/server.ts` + `ui/index.html` |
 | `distribution` | includes `mcp` | `src/mcp.ts` |
 | `distribution` | includes `global` | `"bin": {"[name]": "src/cli.ts"}` in package.json |
+| `theme` | any value | `src/theme.ts` — always generated, sets ACTIVE_THEME |
 
 **Write in this order. Announce each file before writing it. No `// TODO` stubs. Only build what's in the v0.1 scope.**
 
 1. `CLAUDE.md` — references `.cli/plan/CONTEXT.md`, lists `bun hud`, summarizes architecture
-2. `.gitignore` — node_modules, .env, output/, .propane/, .cache/, .fonts/
+2. `.gitignore` — node_modules, .env, output/, .propane/, .cache/, .fonts/, .cli/sessions/
+   (note: `.cli/plan/`, `.cli/audit/`, `.cli/learnings/` are committed — only `sessions/` is gitignored)
 3. `.env.example` — one line per key, `# description` above each
 4. `package.json` — scripts: hud, test, and optionally mcp/serve/run
-5. `src/models.ts` — only the tiers from PLAN_COMPLETE (read assets/models.ts)
-6. `src/configure.ts` — copy verbatim from assets/configure.ts
-7. `src/cli.ts` — routes to hud/wizard/run, under 80 lines
-8. Interface files — read assets/ for reference, adapt for this project
-9. Source files — only sources in v0.1 scope
-10. Server + UI (if browser, and in v0.1)
-11. MCP server (if mcp, and in v0.1)
-12. `tests/cli.test.ts` — **required, not optional** (see testing rules below)
+5. `src/theme.ts` — set ACTIVE_THEME to the value from PLAN_COMPLETE `theme` field (read assets/theme.ts)
+6. `src/models.ts` — only the tiers from PLAN_COMPLETE (read assets/models.ts)
+7. `src/configure.ts` — copy verbatim from assets/configure.ts
+8. `src/cli.ts` — routes to hud/wizard/run, under 80 lines
+9. Interface files — read assets/ for reference, adapt for this project; import THEME from src/theme.ts
+10. Source files — only sources in v0.1 scope
+11. Server + UI (if browser, and in v0.1)
+12. MCP server (if mcp, and in v0.1)
+13. `tests/cli.test.ts` — **required, not optional** (see testing rules below)
 
 **HUD rules** (read `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md` and `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`):
 
@@ -131,6 +145,14 @@ Every HUD gets ASCII art. No exceptions — it's what makes it feel like a real 
 - Extend assets/App.tsx with this project's actual steps
 - NEXT and PREV maps must cover every step — no dead ends
 - Every step gets exactly `onNext(value)` and `onBack()` props
+- `cli/index.tsx` (entry point — no asset, write from scratch):
+  ```tsx
+  #!/usr/bin/env bun
+  import React from 'react'
+  import { render } from 'ink'
+  import App from './App.tsx'
+  render(React.createElement(App))
+  ```
 
 **Testing rules** (read `${CLAUDE_SKILL_DIR}/../../rules/testing.md`):
 

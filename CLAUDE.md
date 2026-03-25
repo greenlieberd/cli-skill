@@ -15,10 +15,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 skills/
   cli-explore/SKILL.md  — /cli:explore: read-only analysis of existing CLIs
-  cli-plan/SKILL.md     — /cli:plan: planning interview → .cli/plan/ folder
+  cli-plan/SKILL.md     — /cli:plan: thin wrapper → launches cli-planner → .cli/plan/ folder
   cli-new/SKILL.md      — /cli:new: plan + scaffold + verify
-    assets/             — copy-paste reference files (hud.ts, App.tsx, Frame.tsx, etc.)
-  cli-audit/SKILL.md    — /cli:audit: explore + plan + execute (replaces audit-cli + fix-cli)
+    assets/             — reference files: hud.ts, theme.ts, models.ts, App.tsx, Frame.tsx, etc.
+  cli-audit/SKILL.md    — /cli:audit: load context + explore + plan + execute tasks
 
 agents/
   cli-planner.md        — goal-driven planning interview → .cli/plan/ folder
@@ -42,29 +42,47 @@ hooks/
 Every project gets a `.cli/` folder Claude Code reads as context:
 ```
 .cli/
-  plan/
-    CONTEXT.md      — what the project is, architecture, what not to do
-    DECISIONS.md    — why each architecture choice was made
-    PLAN.md         — living task list, checked off by /cli:audit
-  audit/
-    EXPLORE.md      — cli:explore findings (architecture map, gaps)
-    GAPS.md         — what's missing vs Propane conventions
-    FIXES.md        — prioritized improvement list
-  tech/
-    STACK.md        — deps, versions, entry points, bun scripts
+  plan/               — committed, travels with repo
+    CONTEXT.md        — what the project is, architecture, what not to do
+    DECISIONS.md      — why each architecture choice was made
+    PLAN.md           — living task list, checked off by /cli:audit
+  audit/              — committed, travels with repo
+    EXPLORE.md        — cli:explore findings (architecture map, gaps)
+    GAPS.md           — what's missing vs conventions
+    FIXES.md          — prioritized improvement list
+  learnings/          — committed, travels with repo
+    SUMMARY.md        — extracted patterns, watch-outs (injected at session start)
+    patterns.md       — what worked
+    watch-out.md      — known gotchas
+    decisions.md      — choices already made, don't re-open
+  sessions/           — gitignored, personal only
+    YYYY-MM-DD.jsonl  — session logs written by Stop hook
+    .errors_buffer.jsonl — bash error buffer
 ```
 
 ## Working here
 
 No build step. Edit markdown and JSON files directly. When adding a rule, use a subject name (`topic.md`) — never `how-to-` prefix or numbers. Every rule must have frontmatter (`name`, `description`, `metadata.tags`) and a Prerequisites block.
 
+## Required workflow — use these tools, not manual review
+
+| When | Tool |
+|------|------|
+| After editing any SKILL.md | `/plugin-dev:skill-reviewer` |
+| After any structural change | `/plugin-dev:plugin-validator` |
+| Creating a new agent | `/plugin-dev:agent-creator` |
+
+These are mandatory. Don't commit plugin changes without running them. They enforce conventions that are invisible in a text editor.
+
 ## Key conventions enforced
 
-- `src/models.ts` — model IDs only here
-- `SourceResult` — sources return, never throw
+- `src/models.ts` — model IDs only here, `{ id, maxTokens }` shape
+- `src/theme.ts` — all ANSI color constants, generated from 5 presets at planning time
+- `SourceResult` — sources return, never throw; `tokens?` field optional
 - No databases — flat files + Claude as query layer
 - `bun hud` — always the entry command
 - ANSI HUDs must handle terminal resize via `process.stdout.on('resize', redraw)`
+- `.cli/plan/` — plan files live in the `plan/` subfolder, not `.cli/` root
 
 ## Rules index
 

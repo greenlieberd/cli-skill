@@ -1,7 +1,7 @@
 ---
 name: cli-architect
 description: Designs the architecture for a new CLI feature or project. Use to get a concrete implementation blueprint — file structure, interfaces, data flow — before writing any code. Spawn in parallel with a second cli-architect using a different philosophy for comparison.
-tools: Glob, Grep, LS, Read
+allowed-tools: Glob, Grep, LS, Read
 model: sonnet
 color: green
 ---

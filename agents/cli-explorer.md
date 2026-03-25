@@ -1,7 +1,7 @@
 ---
 name: cli-explorer
 description: Analyzes an existing CLI project to understand its architecture, patterns, entry points, and dependencies before extending or refactoring it. Use when the user wants to add to an existing CLI. Returns a structured report of what exists and what to preserve.
-tools: Glob, Grep, LS, Read
+allowed-tools: Glob, Grep, LS, Read
 model: sonnet
 color: blue
 ---

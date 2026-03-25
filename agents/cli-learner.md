@@ -2,6 +2,8 @@
 name: cli-learner
 description: Reads .cli/sessions/ logs to build project-scoped institutional memory. Writes compressed learnings back to .cli/learnings/ so future cli:* sessions on this project start with context about what works, what to watch for, and decisions already made. Never touches the cli-skill framework.
 allowed-tools: Read, Write, Glob, Grep, LS, Bash
+model: sonnet
+color: magenta
 ---
 
 # cli-learner — Build project memory from session history

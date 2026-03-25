@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Use this skill when the user wants to improve, fix, extend, or manage features on an existing CLI. Triggers on "audit this CLI", "improve my CLI", "add a feature", "fix the issues", "manage the feature set", "what's in v0.1 vs v0.2", "work through the plan", or any request to evolve an existing tool. Loads full system context first, then explores, plans, and executes. Skips phases already done if .cli/ files exist.
+description: This skill handles improvement, fixing, extending, and feature management on an existing CLI project. Triggers on "audit this CLI", "improve my CLI", "add a feature to X", "fix the issues", "manage the feature set", "what's in v0.1 vs v0.2", "work through the plan", or any request to evolve a tool that already exists. Reads all existing context before making any changes.
 argument-hint: "[path/to/cli-project]"
 model: sonnet
 effort: high

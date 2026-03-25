@@ -1,7 +1,7 @@
 ---
 name: cli-reviewer
 description: Reviews generated CLI code for correctness, completeness, and adherence to Propane CLI conventions. Use after scaffolding to catch issues before the user runs the code. Spawn in parallel with another cli-reviewer using a different review focus.
-tools: Glob, Grep, LS, Read
+allowed-tools: Glob, Grep, LS, Read
 model: sonnet
 color: yellow
 ---

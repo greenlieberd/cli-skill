@@ -22,6 +22,7 @@ export interface SourceResult {
   label:    string     // human display: 'Reddit r/saas', 'Firecrawl'
   content:  string     // fetched text — empty string on error or skip
   links?:   string[]   // URLs found in the content
+  tokens?:  number     // token count if the source ran a Claude call internally
   error?:   string     // error message if fetch failed (content will be '')
   skipped?: boolean    // true if source was toggled off in config (content will be '')
 }
