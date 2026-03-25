@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Glob, Grep, LS, Bash
 
 # cli:plan — Define what to build
 
-A focused planning session. Interview the user, recommend an architecture, confirm decisions, then write a `.cli/plan/` folder that any skill — or any future AI session — can pick up and execute.
+A focused planning session. Interview the user, confirm every decision in a table before writing anything, then produce a `.cli/plan/` folder any skill or future session can execute from.
 
 Works in two modes:
 - **New** — blank slate, full interview
@@ -28,163 +28,171 @@ Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null ||
 
 ## Step 0 — Detect mode
 
-**If an existing PLAN.md is found:**
+**Existing PLAN.md found:**
 ```
 There's already a plan at .cli/plan/PLAN.md.
 
   A) Continue from the existing plan
-  B) Re-plan from scratch (overwrites the existing plan)
-  C) Add to the existing plan — new tasks only
+  B) Re-plan from scratch
+  C) Add new tasks only
 
 Which would you like?
 ```
 
-**If EXPLORE.md exists but no PLAN.md:** → improve mode, skip questions already answered by the findings.
+**EXPLORE.md exists, no PLAN.md** → improve mode, skip questions the code already answers.
 
-**If neither exists:** → new mode, full interview.
+**Neither exists** → new mode, full interview.
 
 ---
 
-## Step 1 — Goal and v0.1 scope (always asked)
+## Step 1 — Goal and v0.1
 
-Two questions, one message:
+One message. Two questions:
 
 ```
 What are we building?
 
-1. Describe the goal in one or two sentences — what does this CLI do,
-   who uses it, what does it produce?
+1. What does this CLI do, who uses it, what does it produce?
 
-2. What's the smallest version that proves it works?
-   Not the full vision — just the thing you'd run tomorrow and say "yes, this is it."
+2. What's the smallest version you'd run tomorrow and say "yes, this is it"?
+   Not the full vision — just the core thing.
 ```
 
-Wait for both answers. Then explicitly confirm the v0.1 scope before moving on:
+After the answer, reflect back the v0.1 scope explicitly:
 
 ```
-Got it. Here's what I'm treating as v0.1:
+Here's what I'm treating as v0.1:
+  • [core thing 1]
+  • [core thing 2 if any]
 
-  [1–3 bullet points — the core thing only]
-
-Everything else goes in "later". We can always append features — but we ship
-something working first. Does this scope feel right?
+Everything else goes in v0.2+. We can always append — but we ship something
+working first. Does this scope feel right?
 ```
 
-If the user tries to pack in too much, push back directly:
-
+If the scope is too broad, push back:
 ```
 That's a lot for v0.1. Which 2–3 things prove the core idea works?
-The rest can be v0.2 — we'll put them in the plan so nothing gets lost.
+The rest will be in the plan as v0.2+ — nothing gets lost.
 ```
 
-Use the confirmed v0.1 scope to filter every decision in the interview that follows.
+Lock the v0.1 scope before continuing. Use it to filter everything that follows.
 
 ---
 
-## Step 2 — Planning interview
+## Step 2 — Interview
 
-Ask these in groups of 2–3, not one by one. Skip any question already answered by EXPLORE.md findings.
+Ask in two rounds. Use tables to present options — easier to scan than prose.
 
-**Interface (skip if EXPLORE.md has this):**
+**Round 1 — Interface and AI:**
+
 ```
-What does the main experience look like?
+Two questions:
 
-  A) Dashboard / HUD — persistent screen, arrow-key navigation, always-on output
-     Good for: monitoring tools, dashboards, tools you run and leave open
-  B) Wizard — step-by-step flow with progress indicator
-     Good for: setup flows, generators, anything with a clear start → end
-  C) Commands — run it, get output, done
-     Good for: scriptable tools, CI, piping output
-  D) Hybrid — HUD for the main loop, wizard for setup or complex actions
+Interface — what does the main experience look like?
 
-[Recommendation based on the goal they described]
-```
+  | Option   | What it is                                    | Good for                              |
+  |----------|-----------------------------------------------|---------------------------------------|
+  | HUD      | Persistent screen, arrow-key nav, always-on   | Monitoring, dashboards, run and leave |
+  | Wizard   | Step-by-step with progress dots               | Setup flows, generators               |
+  | Commands | Run it, get output, done                      | Scriptable, CI, piped output          |
+  | Hybrid   | HUD main loop + wizard for setup              | Tools that do both                    |
 
-**AI usage:**
-```
-Does this tool use Claude?
+AI — does this tool use Claude?
 
-  A) Yes — fast responses (Haiku, low cost, high volume)
-  B) Yes — smart reasoning (Sonnet, balanced)
-  C) Yes — both tiers (fast for drafts, smart for final)
-  D) Reads Claude output but doesn't call the API directly
-  E) No AI
+  | Option | Model        | Cost    | Good for                      |
+  |--------|--------------|---------|-------------------------------|
+  | Fast   | Haiku        | Low     | High-volume, quick responses  |
+  | Smart  | Sonnet       | Medium  | Reasoning, quality output     |
+  | Both   | Haiku+Sonnet | Varies  | Fast drafts, smart finals     |
+  | None   | —            | Free    | No AI needed                  |
 
-[Recommendation based on goal]
+[Your recommendation with one-line rationale for each]
 ```
 
-**Data sources (skip if none make sense for the goal):**
+**Round 2 — Data, output, APIs, distribution:**
+
 ```
-Where does the data come from?
+Three more:
 
-List the APIs, files, or services this tool will read from.
-(e.g., Reddit, Twitter, a local markdown folder, a REST API, competitor websites)
+APIs and data sources — where does the data come from?
+List them (e.g. Reddit, a REST API, local markdown files) or say "none".
 
-Or type "none" if it's self-contained.
-```
+Output — what does this tool produce?
 
-**Output:**
-```
-What does the tool produce?
+  | Option   | What it means                          |
+  |----------|----------------------------------------|
+  | Terminal | Displays only — nothing written        |
+  | Files    | Writes markdown, JSON, HTML to output/ |
+  | Browser  | Opens a page via Bun.serve             |
+  | MCP      | Queryable from Claude Desktop / agents |
 
-  A) Displays in the terminal — nothing written to disk
-  B) Writes files — markdown, JSON, HTML, images
-  C) Browser view — opens a page with the results
-  D) Feeds into another tool — stdout or MCP
+  Multiple ok.
 
-[Multiple ok]
-```
+Distribution — how will this be used?
 
-**Distribution:**
-```
-How will this be used?
+  | Option  | What it means                          |
+  |---------|----------------------------------------|
+  | Personal | Runs on your machine, not shared      |
+  | Team    | Cloned and run by the team             |
+  | Global  | bun install -g, runs as a command      |
+  | MCP server | Exposed as an MCP server           |
 
-  A) Personal — runs on my machine, not shared
-  B) Team — shared internally, cloned and run
-  C) Global install — `bun install -g`, runs as a command anywhere
-  D) MCP server — queryable from Claude Desktop or another agent
-
-[Multiple ok]
+  Multiple ok. MCP server = adds src/mcp.ts.
 ```
 
 ---
 
-## Step 3 — Architecture recommendation
+## Step 3 — Confirm decisions in a table
 
-Based on the answers, write a recommendation before proceeding. Keep it short — the key decision and why:
+Before touching any files, show everything back as a single confirmation table:
 
 ```
-Here's what I'd build:
+Here's the full plan. Confirm before I write anything.
 
-Interface:    [choice] — [one-line rationale]
-AI:           [choice] — [one-line rationale]
-Sources:      [list or "none"]
-Output:       [choice]
-Distribution: [choice]
+  Project
+  ┌─────────────────┬──────────────────────────────────────────────────┐
+  │ Name            │ [project-name]                                   │
+  │ v0.1 scope      │ [1-line summary]                                 │
+  └─────────────────┴──────────────────────────────────────────────────┘
 
-Files this generates:
-  src/cli.ts          entry point + router
-  src/hud.ts          ANSI HUD screen loop        [if HUD or hybrid]
-  cli/App.tsx         Ink wizard state machine     [if wizard or hybrid]
-  src/models.ts       model tier config            [if AI]
-  src/sources/        one file per data source     [if sources]
-  src/server.ts       browser view                 [if browser output]
-  src/mcp.ts          MCP server                   [if MCP]
-  tests/cli.test.ts   bun:test suite
+  Architecture
+  ┌─────────────────┬──────────────────────────────────────────────────┐
+  │ Interface       │ [HUD / Wizard / Commands / Hybrid]               │
+  │ AI              │ [None / Fast / Smart / Both] — [model names]     │
+  │ APIs            │ [list or "none"]                                 │
+  │ Output          │ [Terminal / Files / Browser / MCP]               │
+  │ Distribution    │ [Personal / Team / Global / MCP server]         │
+  └─────────────────┴──────────────────────────────────────────────────┘
 
-Does this look right? Any changes before I write the plan?
+  What gets generated
+  ┌─────────────────────────────┬────────────┬────────────────────────┐
+  │ File                        │ Version    │ Why                    │
+  ├─────────────────────────────┼────────────┼────────────────────────┤
+  │ src/cli.ts                  │ v0.1       │ entry point + router   │
+  │ src/hud.ts + ASCII art      │ v0.1       │ HUD + logo             │
+  │ src/models.ts               │ v0.1       │ [tiers]                │
+  │ src/configure.ts            │ v0.1       │ env loading            │
+  │ src/sources/[name].ts       │ v0.1       │ [each API]             │
+  │ tests/cli.test.ts           │ v0.1       │ required               │
+  │ src/server.ts + ui/         │ v0.2+      │ browser view           │
+  │ src/mcp.ts                  │ v0.2+      │ MCP server             │
+  └─────────────────────────────┴────────────┴────────────────────────┘
+
+  [Show only rows relevant to this project. Mark each as v0.1 or v0.2+.]
+
+Confirm? (yes / change [item])
 ```
 
-Wait for confirmation or adjustments. Apply any changes.
+Wait for confirmation. Apply any changes and re-show the table if anything material changed.
 
 ---
 
 ## Step 4 — Launch the architect
 
 Run the `cli-architect` agent with:
-- The confirmed goal
-- The confirmed architecture decisions
-- The EXPLORE.md findings (if improve mode)
+- The confirmed goal and v0.1 scope
+- The confirmed architecture table
+- EXPLORE.md findings (if improve mode)
 
 The architect produces the detailed implementation blueprint.
 
@@ -192,7 +200,7 @@ The architect produces the detailed implementation blueprint.
 
 ## Step 5 — Write `.cli/plan/`
 
-Create `.cli/plan/` in the project root. Write three files.
+Create `.cli/plan/`. Write three files.
 
 ### `.cli/plan/CONTEXT.md`
 
@@ -202,17 +210,20 @@ Create `.cli/plan/` in the project root. Write three files.
 ## Purpose
 [What it does, who runs it, what triggers it, what it produces]
 
+## v0.1 scope
+[The exact thing that ships first — 1–3 bullets]
+
 ## Interface
 [HUD | Wizard | Commands | Hybrid] — key file: [path]
 
 ## AI
 [Tiers used, what Claude does — or "none"]
 
-## Sources
-[List or "none"]
+## APIs and sources
+[List each: name, what it fetches, SourceResult or not]
 
 ## Output
-[What gets written, where]
+[What gets written, where, in what format]
 
 ## Storage
 .propane/ — runtime state (gitignored)
@@ -223,10 +234,11 @@ output/   — generated files (gitignored)
 - Sources: return SourceResult, never throw
 - Entry: bun hud
 - Resize: process.stdout.on('resize', redraw) in any ANSI HUD
+- ASCII art logo on every HUD home screen
 
 ## Do not
 - [specific anti-pattern for this project]
-- [another constraint]
+- [another constraint from decisions]
 ```
 
 ### `.cli/plan/DECISIONS.md`
@@ -236,16 +248,22 @@ output/   — generated files (gitignored)
 > Planned: [date]
 
 ## Interface: [choice]
-[Why this interface fits the goal]
+[Why this fits the goal. What was considered and rejected.]
 
 ## AI: [choice]
-[Why these tiers]
+[Which tiers, what each does in this tool. Why not the alternative.]
 
-## Sources: [list]
-[Why these, not alternatives]
+## APIs: [list]
+[Why these sources. Authentication approach. Rate limit considerations.]
+
+## Output: [choice]
+[Why files vs terminal vs browser. Format rationale.]
 
 ## Distribution: [choice]
-[Why]
+[Personal / team / global / MCP. Install story.]
+
+## MCP server: [yes for v0.1 | deferred to v0.2+]
+[Why now or why later.]
 ```
 
 ### `.cli/plan/PLAN.md`
@@ -256,51 +274,49 @@ output/   — generated files (gitignored)
 > Status: 0 of [N] tasks complete
 > Planned: [date]
 > Goal: [user's stated goal]
-> v0.1 scope: [1-line summary of what ships first]
+> v0.1 scope: [1-line summary]
 
 ## v0.1 — ship this
 
-Everything here must be done before this is usable. Ordered by dependency.
-Each task is specific enough to start immediately.
+Ordered by dependency. Each task is specific enough to start immediately.
 
 - [ ] **Init project** `chore` — create folder, package.json, bun install, git init
-- [ ] **ASCII art + HUD shell** `feat` — src/hud.ts with logo, menu skeleton, resize handler, ctrl+c exit
+- [ ] **ASCII art + HUD shell** `feat` — src/hud.ts with logo, menu, resize handler, ctrl+c
+- [ ] **Configure + env** `feat` — src/configure.ts, .env.example, all required keys
 - [ ] **[core feature]** `feat` — [specific, one sentence]
-- [ ] **[core feature]** `feat` — [specific]
-- [ ] **Tests** `test` — tests/cli.test.ts covering configure, models, at least one source or command
+- [ ] **[API source]** `feat` — src/sources/[name].ts returning SourceResult, never throws
+- [ ] **Tests** `test` — tests/cli.test.ts: configure, models, [source] happy path + error path
 - [ ] **Verify** `chore` — bun hud starts, bun test passes, ctrl+c restores cursor
 
-## v0.2+ — append later
+## v0.2+ — append after v0.1 ships
 
-Don't build these yet. Add them with /cli:audit after v0.1 ships.
+Use /cli:audit to add these one at a time.
 
 - [ ] **[feature]** `feat` — [specific]
 - [ ] **[feature]** `feat` — [specific]
+- [ ] **MCP server** `feat` — src/mcp.ts [if deferred]
 
 ## Ideas
 
-Not tasks yet — discuss before committing.
+Not tasks yet.
 
 - **[idea]** — [tradeoff]
 ```
 
 ---
 
-## Step 6 — Confirm and hand off
+## Step 6 — Hand off
 
 ```
 Plan written → .cli/plan/
 
-  CONTEXT.md   — what this is and how it works
-  DECISIONS.md — why each architecture choice was made
+  CONTEXT.md   — [project-name]: what it is, v0.1 scope, conventions
+  DECISIONS.md — interface, AI, APIs, output, distribution — and why
   PLAN.md      — [N] v0.1 tasks + [M] v0.2+ features parked for later
 
-v0.1 is [N] tasks. Scope: [under a day | a few days].
+v0.1 is [N] tasks — scope: [under a day | a few days].
+Ship v0.1 first. Use /cli:audit to append from the v0.2+ list.
 
-The goal is a working, testable tool — not the full vision.
-Once v0.1 ships, use /cli:audit to append features from the v0.2+ list.
-
-What's next?
-  /cli:new [name]   — build v0.1 from scratch using this plan
+  /cli:new [name]   — build v0.1 now
   /cli:audit [path] — improve an existing project using this plan
 ```

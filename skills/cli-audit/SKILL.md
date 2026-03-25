@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Use this skill when the user wants to improve, fix, or evolve an existing CLI. Triggers on "audit this CLI", "improve my CLI", "fix the issues", "work through the plan", "what needs changing", "review and fix", or when the user has an existing Bun/ANSI/Ink CLI and wants it better. Combines explore + plan + execute into one flow. Skips phases already done if .cli/ files exist.
+description: Use this skill when the user wants to improve, fix, extend, or manage features on an existing CLI. Triggers on "audit this CLI", "improve my CLI", "add a feature", "fix the issues", "manage the feature set", "what's in v0.1 vs v0.2", "work through the plan", or any request to evolve an existing tool. Loads full system context first, then explores, plans, and executes. Skips phases already done if .cli/ files exist.
 argument-hint: "[path/to/cli-project]"
 model: sonnet
 effort: high
@@ -8,21 +8,22 @@ context: fork
 allowed-tools: Read, Write, Edit, Glob, Grep, LS, Bash
 ---
 
-# cli:audit — Explore, plan, improve
+# cli:audit — Understand the system, then improve it
 
-Full improvement cycle for an existing CLI. Explores the codebase, asks what you want to change, writes a plan, then executes it task by task with commits. Skips phases that are already done.
+Full improvement cycle. Loads all existing context first, maps the current feature set, then explores, plans, and executes task by task with commits. Never makes changes without understanding what's already there.
 
 ## Context loaded at runtime
 
 Directory: !`pwd`
 Target: `$ARGUMENTS`
+CONTEXT.md: !`cat "${ARGUMENTS:-.}/.cli/plan/CONTEXT.md" 2>/dev/null | head -40 || echo "none"`
+PLAN.md status: !`grep "^> Status:" "${ARGUMENTS:-.}/.cli/plan/PLAN.md" 2>/dev/null || echo "none"`
 Existing explore: !`[ -f "${ARGUMENTS:-.}/.cli/audit/EXPLORE.md" ] && echo "found" || echo "none"`
-Existing plan: !`[ -f "${ARGUMENTS:-.}/.cli/plan/PLAN.md" ] && echo "found" || echo "none"`
 Project memory: !`cat "${ARGUMENTS:-.}/.cli/learnings/SUMMARY.md" 2>/dev/null || echo "none"`
 
 ---
 
-## Step 0 — Confirm and orient
+## Step 0 — Confirm path
 
 If `$ARGUMENTS` is a path, use it. Otherwise:
 ```
@@ -30,211 +31,265 @@ Which CLI should I audit?
 (paste the path, or press enter for current directory)
 ```
 
-Then show what already exists:
+---
+
+## Step 1 — Load system context
+
+Before exploring the code, read everything that already exists about this project.
+
+Read in order (skip gracefully if not found):
+1. `.cli/plan/CONTEXT.md` — what the project is, v0.1 scope, conventions
+2. `.cli/plan/DECISIONS.md` — why each architecture choice was made
+3. `.cli/plan/PLAN.md` — current task progress, v0.1 vs v0.2+ breakdown
+4. `.cli/learnings/SUMMARY.md` — patterns, watch-outs, known errors from past sessions
+5. `.cli/learnings/decisions.md` — choices already made, don't re-open
+6. `.cli/audit/EXPLORE.md` — last explore findings if present
+
+Then show a system snapshot:
 
 ```
-Auditing: [path]
+System context loaded — [project-name]
 
-  .cli/audit/EXPLORE.md  — [found, will reuse | not found, will explore]
-  .cli/plan/PLAN.md      — [found: X of N tasks complete | not found, will plan]
+  ┌─────────────────┬──────────────────────────────────────────────────┐
+  │ Interface       │ [from CONTEXT.md or "unknown"]                   │
+  │ AI              │ [tiers + purpose or "none"]                      │
+  │ APIs            │ [list or "none"]                                 │
+  │ Output          │ [type]                                           │
+  │ Distribution    │ [how it's used]                                  │
+  └─────────────────┴──────────────────────────────────────────────────┘
 
-[If plan found with tasks remaining:]
-  There's an existing plan with [N] tasks remaining.
-  A) Continue working through it
-  B) Re-explore and re-plan (overwrites existing plan)
-  C) Add to the existing plan after re-exploring
+  Plan progress: [X of N v0.1 tasks complete]
 
-Which would you like?
+  Feature set:
+  ┌──────────────────────────────┬─────────┬──────────────────────────┐
+  │ Feature                      │ Version │ Status                   │
+  ├──────────────────────────────┼─────────┼──────────────────────────┤
+  │ [feature from plan]          │ v0.1    │ ✓ done / ☐ pending       │
+  │ [feature from plan]          │ v0.1    │ ✓ done / ☐ pending       │
+  │ [feature from v0.2+ list]    │ v0.2+   │ parked                   │
+  └──────────────────────────────┴─────────┴──────────────────────────┘
+
+  [If learnings exist:]
+  Memory: [key watch-out from SUMMARY.md]
 ```
 
-If plan is complete or not found, continue to explore.
+If CONTEXT.md and PLAN.md don't exist yet, note it and continue — the explore step will fill in what's missing.
 
 ---
 
-## Step 1 — Explore (skip if EXPLORE.md is fresh)
+## Step 2 — Ask what we're working on
 
-If `.cli/audit/EXPLORE.md` does not exist, run the `cli-explorer` agent:
+One question. Options cover the full range of audit work including feature management:
+
+```
+What are we working on today?
+
+  A) Fix issues — crashes, broken patterns, convention violations
+  B) Improve UX — navigation, output clarity, resize, feedback
+  C) Add a feature — pick something from the v0.2+ list, or describe a new one
+  D) Manage the feature set — review what's in v0.1, adjust scope, re-prioritize
+  E) Prep for release — tests, docs, .env.example, CLAUDE.md
+  F) Full audit — explore everything and decide from findings
+
+Or describe what's on your mind.
+```
+
+**If D (feature set management):**
+Show the current feature table from Step 1 and ask:
+```
+Here's the current feature set:
+
+  v0.1 (build now):
+    [list from PLAN.md]
+
+  v0.2+ (parked):
+    [list from PLAN.md]
+
+What would you like to change?
+  — Move something from v0.2+ to v0.1
+  — Move something from v0.1 to v0.2+ (scope reduction)
+  — Add a new feature to either list
+  — Remove something entirely
+
+After this we update the plan and decide what to build next.
+```
+
+Update PLAN.md to reflect changes before continuing.
+
+---
+
+## Step 3 — Explore (skip if EXPLORE.md is fresh and goal is known)
+
+If `.cli/audit/EXPLORE.md` doesn't exist, or the goal requires fresh findings, run `cli-explorer`:
 
 > Analyze the CLI at [path]. Report:
-> 1. How to run it — entry point, bun scripts
+> 1. How to run it — entry points, bun scripts
 > 2. Interface type — ANSI HUD, Ink Wizard, Commands, Hybrid
-> 3. AI usage — model IDs, what Claude does, which tiers
-> 4. Data sources — what APIs or files, SourceResult or throw?
-> 5. Output — what gets written, where
-> 6. Storage — .propane/ and output/
-> 7. Tests — coverage and gaps
-> 8. Convention gaps — hardcoded models, throwing sources, no resize, no CLAUDE.md
-> 9. The 5 files to read first
+> 3. AI usage — model IDs location, tiers, what Claude does
+> 4. APIs and sources — what's fetched, SourceResult or throw?
+> 5. Output — what gets written, where, in what format
+> 6. Storage — .propane/ and output/ contents
+> 7. Tests — what's covered, what's missing, mock patterns
+> 8. Feature completeness — which v0.1 plan items are actually done vs scaffolded
+> 9. Convention gaps — hardcoded models, throwing sources, no resize, no CLAUDE.md
+> 10. The 5 files to read first before touching anything
 
 Write findings to `.cli/audit/EXPLORE.md`.
 
-Show the user a quick summary:
+Show a summary table:
 ```
 Explored [project-name]:
 
-  Interface:  [type]
-  Sources:    [N] ([working] ok, [broken] need fixing)
-  Tests:      [summary]
-  Issues:     [N] found
+  ┌──────────────────┬───────────────────────────────────────────────┐
+  │ Interface        │ [type] — [key file]                           │
+  │ AI               │ [usage summary]                               │
+  │ Sources          │ [N] total — [X] ok, [Y] throwing              │
+  │ Tests            │ [coverage summary]                            │
+  │ Convention gaps  │ [N] found                                     │
+  └──────────────────┴───────────────────────────────────────────────┘
 
-Full details → .cli/audit/EXPLORE.md
+  Issues:
+    ✗ [most important]
+    ✗ [second]
+    ✗ [third if any]
+
+Full findings → .cli/audit/EXPLORE.md
 ```
 
 ---
 
-## Step 2 — Understand the goal
+## Step 4 — Plan improvements
 
-One question, not a form:
-
-```
-What are you trying to improve?
-
-  A) Fix issues — crashes, broken patterns, convention violations
-  B) Better UX — navigation, output clarity, resize handling, feedback
-  C) New capabilities — sources, commands, interface features
-  D) Prep for release — tests, docs, .env.example, CLAUDE.md
-  E) All of the above — full audit
-
-Or tell me what's on your mind.
-```
-
----
-
-## Step 3 — Plan improvements
-
-Run the `cli-planner` agent in **improve mode**. Pass:
+Run `cli-planner` in **improve mode** with:
 - The EXPLORE.md findings
-- The user's stated goal
-- The project path
+- The system context from Step 1
+- The user's stated goal from Step 2
+- The current PLAN.md feature set
 
-The planner produces improvements as a PLAN.md — ordered by impact, scoped to what was asked. It writes:
-- `.cli/plan/CONTEXT.md` (create or update)
-- `.cli/plan/DECISIONS.md` (create or update)
-- `.cli/plan/PLAN.md`
-- `.cli/audit/GAPS.md` — issues found vs conventions
-- `.cli/audit/FIXES.md` — prioritized improvement list (mirrors PLAN.md, human-readable)
+The planner:
+- Does not re-open decisions already in DECISIONS.md
+- Does not suggest features already deferred to v0.2+
+- Writes tasks that fit the existing architecture
+- Produces:
+  - `.cli/plan/PLAN.md` — updated with new tasks in the right section
+  - `.cli/audit/GAPS.md` — convention violations found
+  - `.cli/audit/FIXES.md` — improvement list, human-readable
 
-Show the plan to the user before executing:
+Show the plan before executing:
+
 ```
-Here's the improvement plan — [N] tasks:
+Improvement plan — [N] tasks:
 
-Build next:
-  1. [task] — [one sentence]
-  2. [task] — [one sentence]
-  3. [task]
+  ┌────┬─────────────────────────────────┬──────────┬──────────────────────────┐
+  │ #  │ Task                            │ Type     │ Why                      │
+  ├────┼─────────────────────────────────┼──────────┼──────────────────────────┤
+  │ 1  │ [task name]                     │ fix      │ [one-line reason]        │
+  │ 2  │ [task name]                     │ feat     │ [one-line reason]        │
+  │ 3  │ [task name]                     │ test     │ [one-line reason]        │
+  └────┴─────────────────────────────────┴──────────┴──────────────────────────┘
 
-Later:
-  4. [task]
-  5. [task]
+  Parked for later (not in this run):
+    — [feature or fix deferred]
 
-Proceed with all? Or pick where to start.
+Proceed with all? Or tell me where to start.
 ```
 
 Wait for confirmation.
 
 ---
 
-## Step 4 — Execute task by task
+## Step 5 — Execute task by task
 
-Work through `.cli/plan/PLAN.md` top to bottom. One task at a time.
+Work through tasks top to bottom. One at a time.
 
 Before each task:
 ```
-Working on: [task name]
-Type: [feat | fix | refactor | test | docs | chore]
-[One sentence description]
+Working on: [task name]  ([type])
+[One sentence — what this does and why]
 ```
 
 **By task type:**
 
-`fix` — minimal change, don't refactor surroundings:
-- Hardcoded model ID → move to `src/models.ts`, grep all occurrences, replace with `MODELS.fast.id`
-- Source throws → replace `throw` with `return sourceError(source, label, err)`
-- No resize handler → add `process.stdout.on('resize', redraw)` to hud.ts
-- No CLAUDE.md → write from `.cli/plan/CONTEXT.md`
+`fix` — minimal, targeted:
+- Hardcoded model ID → move to `src/models.ts`, grep all, replace with `MODELS.fast.id`
+- Source throws → `return sourceError(source, label, err)`, import the helper
+- No resize handler → `process.stdout.on('resize', redraw)` in hud.ts
+- Missing CLAUDE.md → write from `.cli/plan/CONTEXT.md`
 
-`feat` — read `.cli/plan/CONTEXT.md` first, check assets/ for reference patterns, write complete files:
-- Read `${CLAUDE_SKILL_DIR}/../../rules/[relevant-rule].md` before writing
-- No stubs, no TODOs
+`feat` — read CONTEXT.md first, then the relevant rule, write complete files, no stubs:
+- Check `.cli/plan/DECISIONS.md` — don't contradict a prior decision
+- Check `.cli/learnings/watch-out.md` — known gotchas for this project
+- Reference the correct rule from `${CLAUDE_SKILL_DIR}/../../rules/`
 
-`refactor` — read the full file before splitting, extract at clean boundaries, update all imports
+`refactor` — read the full file, extract at clean boundaries, update all imports
 
-`test` — follow the existing mock/fixture pattern, test the specific case named in the task
+`test` — follow the existing mock pattern, test the specific case in the task
 
-`docs` — accurate over comprehensive, keep CLAUDE.md under 80 lines
+`docs` — accurate > comprehensive, CLAUDE.md under 80 lines
 
 `chore` — minimal change only
 
 **After each task:**
 
 1. Verify:
-   ```bash
-   cd [path] && bun typecheck 2>&1 | head -20
-   bun test 2>&1 | tail -10
-   ```
-   If entry point was touched: ask user to run `bun hud` and confirm it starts.
+```bash
+cd [path] && bun typecheck 2>&1 | head -20
+bun test 2>&1 | tail -10
+```
+If entry point was touched: ask user to confirm `bun hud` starts.
 
 2. Commit:
-   ```bash
-   git add -A && git commit -m "[type]: [task name]"
-   ```
+```bash
+git add -A && git commit -m "[type]: [task name]"
+```
 
-3. Check off in PLAN.md:
-   - `- [ ]` → `- [x]`
-   - Update status line: `Status: [X] of [N] tasks complete`
+3. Check off in PLAN.md: `- [ ]` → `- [x]`, update status line.
 
 4. Show progress:
-   ```
-   ✓ [task name]
-   Progress: [X] of [N]
+```
+✓ [task name]  [X of N]
 
-   Next: [task] — [description]
-   Continue? (yes / skip / stop)
-   ```
+Next: [task] — [one sentence]
+Continue? (yes / skip / stop)
+```
 
-**skip** → mark as `- [~]` (deferred), move to next.
-**stop** → "Resume with `/cli:audit [path]` when you're ready."
+**skip** → mark `- [~]`, move to next.
+**stop** → "Resume with `/cli:audit [path]` when ready."
 
 ---
 
-## Step 5 — Finish
+## Step 6 — Finish
 
 When all tasks are done:
 
 ```
-✓ All [N] tasks complete — [project-name] is in good shape.
+✓ [N] tasks complete — [project-name]
 
-What changed:
-  [bulleted list of completed tasks, grouped by type]
+  ┌──────────────────────┬───────────────────────────────────────────┐
+  │ What changed         │ [grouped by type: fixes / features / tests]│
+  │ Convention status    │ ✓ models.ts / ✓ SourceResult / ✓ resize   │
+  │ Test status          │ bun test: [pass / fail summary]            │
+  │ v0.1 progress        │ [X of N tasks complete]                   │
+  │ v0.2+ parked         │ [N features waiting]                      │
+  └──────────────────────┴───────────────────────────────────────────┘
 
-Convention status:
-  ✓ Model IDs centralized
-  ✓ Sources return SourceResult
-  ✓ Resize handler present
-  [etc.]
-
-Run /cli:explore [path] again anytime to check current state.
+Run /cli:learn [path] after a few more sessions to extract patterns.
+Run git push when you're ready.
 ```
-
-Run a final check:
-```bash
-cd [path] && bun hud && bun test
-```
-
-Do not push. Tell the user: "Run `git push` when you're ready."
 
 ---
 
 ## Rules reference
 
-Read when working on the corresponding task types:
+Read before working on the corresponding file type:
 
-- HUD resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`
-- Colors and ANSI palette: `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
+- HUD, resize, navigation: `${CLAUDE_SKILL_DIR}/../../rules/hud-screens.md`
+- ASCII art: `${CLAUDE_SKILL_DIR}/../../rules/ascii-art.md`
+- Colors: `${CLAUDE_SKILL_DIR}/../../rules/colors.md`
 - Display system: `${CLAUDE_SKILL_DIR}/../../rules/display-system.md`
-- SourceResult pattern: `${CLAUDE_SKILL_DIR}/../../rules/source-results.md`
-- Model tiers: `${CLAUDE_SKILL_DIR}/../../rules/models.md`
+- SourceResult: `${CLAUDE_SKILL_DIR}/../../rules/source-results.md`
+- Models: `${CLAUDE_SKILL_DIR}/../../rules/models.md`
 - Error recovery: `${CLAUDE_SKILL_DIR}/../../rules/error-recovery.md`
-- Testing patterns: `${CLAUDE_SKILL_DIR}/../../rules/testing.md`
-- Retry + backoff: `${CLAUDE_SKILL_DIR}/../../rules/retry.md`
+- Testing: `${CLAUDE_SKILL_DIR}/../../rules/testing.md`
+- Retry: `${CLAUDE_SKILL_DIR}/../../rules/retry.md`
 - Conventions: `${CLAUDE_SKILL_DIR}/../../rules/conventions.md`
