@@ -30,9 +30,11 @@ rules/                  — 42 subject-named rules with frontmatter + prerequisi
   (see full list below)
 
 hooks/
-  hooks.json            — convention check (scoped to CLI projects) + session reminder
-  check_conventions.py  — warns on hardcoded model IDs, throwing sources, DB imports
-  load_context.sh       — session reminder, only fires in CLI projects
+  hooks.json            — PreToolUse conventions + PostToolUse error capture + Stop session logger + SessionStart context
+  check_conventions.py  — warns on model IDs, throwing sources, DB imports (PreToolUse)
+  error_capture.py      — buffers bash errors to .cli/sessions/.errors_buffer.jsonl (PostToolUse:Bash)
+  session_logger.py     — writes session summary to .cli/sessions/YYYY-MM-DD.jsonl (Stop)
+  load_context.sh       — session start reminder, scoped to CLI projects
 ```
 
 ## The .cli/ folder convention

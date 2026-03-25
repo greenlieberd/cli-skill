@@ -1,5 +1,5 @@
 {
-  "description": "CLI convention enforcement. PreToolUse warns on bad patterns. SessionStart scopes reminder to CLI projects only.",
+  "description": "CLI convention enforcement + session learning. PreToolUse warns on bad patterns. PostToolUse:Bash captures errors. Stop logs session summary. SessionStart injects context and learnings.",
   "hooks": {
     "PreToolUse": [
       {
@@ -13,13 +13,37 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SCRIPT=$(find ~/.claude/plugins -name 'error_capture.py' 2>/dev/null | head -1); [ -n \"$SCRIPT\" ] && python3 \"$SCRIPT\" || echo '{\"continue\":true}'",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "SCRIPT=$(find ~/.claude/plugins -name 'session_logger.py' 2>/dev/null | head -1); [ -n \"$SCRIPT\" ] && python3 \"$SCRIPT\" || echo '{\"continue\":true}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'if [ -f src/cli.ts ] || ([ -f package.json ] && grep -q \"\\\"hud\\\"\" package.json 2>/dev/null); then echo \"{\\\"continue\\\":true,\\\"systemMessage\\\":\\\"CLI project detected. Rules: model IDs only in src/models.ts · sources return SourceResult never throw · no databases use flat files · .propane/ for runtime state. Use /new-cli to scaffold, /audit-cli to review, /fix-cli to execute a plan.\\\"}\" ; else echo \"{\\\"continue\\\":true}\"; fi'",
+            "command": "bash -c '\nIS_CLI=false\n[ -f src/cli.ts ] && IS_CLI=true\n[ -f package.json ] && grep -q '\"hud\"' package.json 2>/dev/null && IS_CLI=true\n\nif [ \"$IS_CLI\" = \"true\" ]; then\n  LEARNINGS=\"\"\n  [ -f .cli/learnings/SUMMARY.md ] && LEARNINGS=$(head -30 .cli/learnings/SUMMARY.md 2>/dev/null)\n  if [ -n \"$LEARNINGS\" ]; then\n    MSG=\"CLI project detected. Conventions: model IDs only in src/models.ts · sources return SourceResult never throw · no databases use flat files. Session learnings available at .cli/learnings/ — check SUMMARY.md for patterns and known issues before making changes.\"\n  else\n    MSG=\"CLI project detected. Conventions: model IDs only in src/models.ts · sources return SourceResult never throw · no databases use flat files · .propane/ for runtime state. Skills: /cli:new /cli:plan /cli:explore /cli:audit /cli:learn\"\n  fi\n  echo \"{\\\"continue\\\":true,\\\"systemMessage\\\":\\\"$MSG\\\"}\"\nelse\n  echo \"{\\\"continue\\\":true}\"\nfi\n'",
             "timeout": 3
           }
         ]
