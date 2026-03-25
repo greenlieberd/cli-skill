@@ -254,7 +254,26 @@ else
   log_fail "Did not detect throwing source"
 fi
 
-# ─── 9. Unit tests (pytest) ───────────────────────────────────────
+# ─── 9. Integration tests (pytest) ────────────────────────────────
+if [ "$PYTEST" = true ] && [ "$UNIT_ONLY" = false ]; then
+  log_section "Integration tests (contract validation)"
+  INT_OUT=$(python3 -m pytest "$SCRIPT_DIR/integration/" -v --tb=short 2>&1 || true)
+  INT_PASS=$(echo "$INT_OUT" | grep -c "PASSED" || true)
+  INT_FAIL=$(echo "$INT_OUT" | grep -c "FAILED" || true)
+  INT_ERROR=$(echo "$INT_OUT" | grep -c "ERROR" || true)
+
+  PASS=$((PASS + INT_PASS))
+  FAIL=$((FAIL + INT_FAIL + INT_ERROR))
+
+  if [ "$INT_FAIL" -eq 0 ] && [ "$INT_ERROR" -eq 0 ]; then
+    log_pass "All $INT_PASS integration tests passed"
+  else
+    log_fail "$INT_FAIL failed, $INT_ERROR errors (from $((INT_PASS + INT_FAIL + INT_ERROR)) tests)"
+    echo "$INT_OUT" | grep -A 5 "FAILED\|ERROR" | head -20 | sed 's/^/    /'
+  fi
+fi
+
+# ─── 10. Unit tests (pytest) ──────────────────────────────────────
 if [ "$PYTEST" = true ] && [ "$UNIT_ONLY" = false ] || [ "$UNIT_ONLY" = true ]; then
   log_section "Unit tests (pytest)"
   PYTEST_OUT=$(python3 -m pytest "$SCRIPT_DIR/unit/" -v --tb=short 2>&1 || true)
@@ -276,7 +295,7 @@ elif [ "$PYTEST" = false ]; then
   log_skip "pytest not available — install: pip3 install pytest"
 fi
 
-# ─── 10. Generate REPORT.md ───────────────────────────────────────
+# ─── 11. Generate REPORT.md ───────────────────────────────────────
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))
 TOTAL=$((PASS + FAIL + SKIP))
