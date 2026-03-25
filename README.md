@@ -4,6 +4,58 @@
 
 ---
 
+## Before / After
+
+This is what most AI-generated CLIs look like:
+
+```
+$ bun run index.ts
+
+Connecting to APIs...
+Fetching reddit...    done
+Fetching hn...        done
+Fetching twitter...   error: 429 Too Many Requests
+Writing output/2024-01-15.md...
+Done. 2/3 sources ok. 31 items.
+
+$
+```
+
+Runs. Does the job. Tells you nothing. Gives you no control. You close the terminal and open the markdown file somewhere else.
+
+This is what the same tool looks like designed:
+
+```
+╭──────────────────────────────────────────────────────────╮
+│                                                          │
+│   ██████╗ ██╗   ██╗██╗     ███████╗███████╗             │
+│   ██╔══██╗██║   ██║██║     ██╔════╝██╔════╝             │
+│   ██████╔╝██║   ██║██║     ███████╗█████╗               │
+│   ██╔═══╝ ██║   ██║██║     ╚════██║██╔══╝               │
+│   ██║     ╚██████╔╝███████╗███████║███████╗             │
+│   ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝             │
+│                                                          │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│   ▶  Generate today's briefing        ready             │
+│      Review queue                     14 items          │
+│      Source status                    2 / 3 ok          │
+│      Archive                          347 entries        │
+│      Settings                                           │
+│                                                          │
+│   ─────────────────────────────────────────────────     │
+│   reddit ✓   hn ✓   twitter ✗ rate limit                │
+│                                                          │
+│   ↑↓ navigate   enter select   ? help   ctrl+c exit     │
+╰──────────────────────────────────────────────────────────╯
+```
+
+Same tool. Same APIs. One of them you run once and forget. The other one you open first thing in the morning.
+
+That's the gap this plugin closes. → [See more examples in the gallery](GALLERY.md)
+
+---
+
 ## Why this exists
 
 The first time you open a terminal, something clicks. There's no design system, no component library, no browser between you and what you're doing. It's stripped away — and that's the power of it.
