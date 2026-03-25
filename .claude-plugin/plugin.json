@@ -1,7 +1,7 @@
 {
   "name": "cli",
   "description": "UX-first CLI builder for Bun/Ink/ANSI — plan, scaffold, explore, and audit production CLIs.",
-  "version": "3.0.0",
+  "version": "0.1.0",
   "author": {
     "name": "Propane",
     "email": "team@usepropane.ai"
